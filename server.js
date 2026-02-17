@@ -5,6 +5,7 @@ require('dotenv').config();
 
 //Importing Routes
 const passengerRoutes = require('./routes/passenger');
+const trupRoutes = require('./models/Trip');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,7 @@ app.use(bodyParser.json());
 
 //Using Routes
 app.use('/api/passenger', passengerRoutes);
+app.use('/api/trip', trupRoutes);
 
 //Server Startup
 app.listen(PORT, () => {
