@@ -1,4 +1,4 @@
-const db = require('../db')
+const db = require('../config/db')
 
 class Bus {
     constructor(data) {
@@ -9,7 +9,7 @@ class Bus {
         this.capacity = data.capacity;
         this.route_id = data.route_id;
         this.operator_id = data.operator_id;
-        this.status = data.status || 'active';
+        this.status = data.status || 'ACTIVE';
     }
 
     // Method to get the latest location of the buses
