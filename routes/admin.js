@@ -10,7 +10,7 @@ router.get('/routes', async (req, res) => {
         res.json(routes);
     } catch (error) {
         console.error('Errors fetching routes', error);
-        res.status(500).json({ error: 'Server Error'});
+        res.status(500).json({ error: 'Server Error' });
     }
 });
 
