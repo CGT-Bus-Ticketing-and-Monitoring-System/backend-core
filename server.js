@@ -7,6 +7,7 @@ require('dotenv').config();
 const passengerRoutes = require('./routes/passenger');
 const trupRoutes = require('./models/Trip');
 const adminRoutes = require('./routes/admin');
+const iotSystemRoutes = require('./routes/iotSystem');
 
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(bodyParser.json());
 app.use('/api/passenger', passengerRoutes);
 app.use('/api/trip', trupRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/iotSystem', iotSystemRoutes);
 
 //Server Startup
 app.listen(PORT, () => {
