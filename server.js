@@ -8,6 +8,7 @@ const passengerRoutes = require('./routes/passenger');
 const trupRoutes = require('./models/Trip');
 const adminRoutes = require('./routes/admin');
 const iotSystemRoutes = require('./routes/iotSystem');
+const testRoutes = require('./routes/test');
 
 
 const app = express();
@@ -22,6 +23,7 @@ app.use('/api/passenger', passengerRoutes);
 app.use('/api/trip', trupRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/iotSystem', iotSystemRoutes);
+app.use('/api/test', testRoutes);
 
 //Server Startup
 app.listen(PORT, () => {
