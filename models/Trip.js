@@ -13,10 +13,10 @@ router.get("/active/:passengerId", (req, res) => {
         b.registration_number,
         r.start_location,
         r.end_location
-    FROM trip t
-    INNER JOIN bus b 
+    FROM Trip t
+    INNER JOIN Bus b 
         ON t.bus_id = b.bus_id
-    INNER JOIN route r 
+    INNER JOIN Route r 
         ON b.route_id = r.route_id
     WHERE 
         t.passenger_id = ?
