@@ -1,7 +1,49 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcrypt'); 
+const jwt = require('jsonwebtoken');
 
 const Route = require('../models/Route');
+const Admin = require('../models/Admin');
+const authMiddleware = require('../middleware/authMiddleware');
+
+//login
+router.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Username and password are required' });
+    }
+
+    try {
+        const admin = await Admin.findByUsername(username);
+        
+        if (!admin) {
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+
+        const isMatch = await bcrypt.compare(password, admin.password_hash);
+        
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+
+        const token = jwt.sign(
+            { adminId: admin.admin_id, role: 'admin' }, 
+            process.env.JWT_SECRET || 'default_secret_key', 
+            { expiresIn: '8h' } 
+        );
+
+        res.status(200).json({
+            message: 'Login successful',
+            token: token
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Server error during login' });
+    }
+});
 
 //get all routes
 router.get('/routes', async (req, res) => {
