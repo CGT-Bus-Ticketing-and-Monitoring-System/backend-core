@@ -63,9 +63,29 @@ async function changePassword(passengerId, username, currentPassword, newPasswor
     await Passenger.updatePassword(passengerId, newHash);
 }
 
+async function getProfile(passengerId) {
+    const user = await  Passenger.findById(passengerId);
+
+    if (!user) {
+        throw { status: 404, message: 'User not found' };
+    }
+
+    return {
+        id: user.passenger_id,
+        username: user.username,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        balance: user.balance,
+        card_uid: user.card_uid,
+        email: user.email,
+        phone: user.phone
+    }
+}
+
 module.exports = {
     login,
     updateProfile,
-    changePassword
+    changePassword,
+    getProfile
 };
 

@@ -36,6 +36,27 @@ class Passenger {
         });
     }
 
+    static findById(id) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT p.*, c.rfid_uid FROM Passenger p
+                LEFT JOIN Card c ON p.card_id = c.card_id
+                WHERE p.passenger_id = ? AND p.status = 'ACTIVE'
+            `;
+            db.query(query, [id], (err, results) => {
+                if (err) { 
+                    return reject(err);
+                }
+                if (results.length > 0) {
+                    resolve(new Passenger(results[0]));
+                }
+                else {
+                    resolve(null);
+                }
+            });
+        });
+    }
+
     static async updatePassenger(id, data) {
         return new Promise((resolve, reject) => {
             const query = `
