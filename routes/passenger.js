@@ -70,4 +70,14 @@ router.put('/change_password', authMiddleware, async (req, res) => {
     }
 });
 
+//Fetch Profile
+router.get('/profile', authMiddleware, async (req, res) => {
+    try {
+        const userProfile = await passengerService.getProfile(req.user.id);
+        res.json(userProfile);
+    } catch (error) {
+        res.status(error.status || 500).json({message: error.message || 'Server Error'});
+    }
+});
+
 module.exports = router;
