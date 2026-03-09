@@ -36,12 +36,26 @@ router.post('/login', async (req, res) => {
 
         res.status(200).json({
             message: 'Login successful',
-            token: token
+            token: token,
+            fname: admin.fname
         });
 
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Server error during login' });
+    }
+});
+
+// get dashboard stats
+router.get('/dashboard-stats', authMiddleware, async (req, res) => {
+    try {
+        const stats = await Admin.getDashboardStats();
+        
+        res.status(200).json(stats);
+        
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        res.status(500).json({ error: 'Database error fetching stats' });
     }
 });
 
