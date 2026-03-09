@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const Route = require('../models/Route');
 const Admin = require('../models/Admin');
 const authMiddleware = require('../middleware/authMiddleware');
+const OperatorService = require('../services/operatorService');
 
 //login
 router.post('/login', async (req, res) => {
@@ -157,5 +158,67 @@ router.post('/routes/assign-bus', async (req, res) => {
         res.status(500).json({ error: 'Database Error'});
     }
 })
+
+// OPERATOR MANAGEMENT ROUTES
+
+
+router.get('/operators', authMiddleware, async (req, res) => {
+    try {
+        const operators = await OperatorService.getAllOperators();
+        res.json(operators);
+    } catch (error) {
+        console.error('Error fetching operators:', error);
+        res.status(500).json({ error: 'Server Error' });
+    }
+});
+
+// Create an operator
+router.post('/operators/create', authMiddleware, async (req, res) => {
+    const { fname, lname, username, email, phone, password } = req.body;
+
+    if (!fname || !lname || !username || !email || !phone || !password) {
+        return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    try {
+        const newId = await OperatorService.createOperator({ 
+            fname, lname, username, email, phone, password 
+        });
+        res.status(201).json({ message: 'Operator created', operator_id: newId });
+    } catch (error) {
+        console.error('Error creating operator:', error);
+        res.status(500).json({ error: 'Database Error (Username/Email might already exist)' });
+    }
+});
+
+// Update an operator
+router.put('/operators/update/:id', authMiddleware, async (req, res) => {
+    try {
+        const success = await OperatorService.updateOperator(req.params.id, req.body);
+        if (success) {
+            res.json({ message: 'Operator updated successfully' });
+        } else {
+            res.status(404).json({ message: 'Operator not found' });
+        }
+    } catch (error) {
+        console.error('Error updating operator:', error);
+        res.status(500).json({ error: 'Server Error' });
+    }
+});
+
+// Deactivate an operator
+router.put('/operators/deactivate/:id', authMiddleware, async (req, res) => {
+    try {
+        const success = await OperatorService.deactivateOperator(req.params.id);
+        if (success) {
+            res.json({ message: 'Operator deactivated' });
+        } else {
+            res.status(404).json({ message: 'Operator not found' });
+        }
+    } catch (error) {
+        console.error('Error deactivating operator:', error);
+        res.status(500).json({ error: 'Server Error' });
+    }
+});
 
 module.exports = router;
