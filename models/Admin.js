@@ -96,16 +96,6 @@ class Admin {
             });
         });
     }
-
-    static deactivatePassenger(id) {
-        return new Promise((resolve, reject) => {
-            const query = `UPDATE Passenger SET status = 'INACTIVE' WHERE passenger_id = ?`;
-            db.query(query, [id], (err, results) => {
-                if (err) return reject(err);
-                resolve(results.affectedRows > 0);
-            });
-        });
-    }    
     static getAvailableCards() {
         return new Promise((resolve, reject) => {           
             const query = `
