@@ -5,7 +5,7 @@ require('dotenv').config();
 
 //Importing Routes
 const passengerRoutes = require('./routes/passenger');
-const trupRoutes = require('./models/Trip');
+const tripRoutes = require('./models/Trip');
 const adminRoutes = require('./routes/admin');
 const iotSystemRoutes = require('./routes/iotSystem');
 const testRoutes = require('./routes/test');
@@ -20,7 +20,7 @@ app.use(bodyParser.json());
 
 //Using Routes
 app.use('/api/passenger', passengerRoutes);
-app.use('/api/trip', trupRoutes);
+app.use('/api/trip', tripRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/iotSystem', iotSystemRoutes);
 app.use('/api/test', testRoutes);
