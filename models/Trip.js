@@ -3,6 +3,12 @@ const router = express.Router();
 const db = require("../config/db");
 
 router.get("/active/:passengerId", (req, res) => {
+
+  const passengerId = Number(req.params.passengerId);
+  if (NaN) {
+    return res.status(400).json({success: false, message: "Invalid Passenger ID"});
+  }
+
   const sql = `
     SELECT 
         t.start_time,
@@ -95,7 +101,7 @@ router.get("/cancel/:passengerId", (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid passenger ID" });
   }
 
-  sql = `
+  const sql = `
     SELECT 
       t.start_time,
       t.status,

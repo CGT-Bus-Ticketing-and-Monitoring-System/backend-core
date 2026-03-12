@@ -1,0 +1,24 @@
+name: Deploy to Digitalocean
+
+on:
+    push:
+        branches: ["main"]
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Deploy to server
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                host: ${{ secrets.DO_HOST }}
+                username: root
+                key: ${{ secrets.DO_SSH_KEY }}
+
+                script: |
+                    cd ~/backend/backend-core
+                    git pull origin main
+                    npm install 
+                    pm2 restart passenger-backend
+
