@@ -8,6 +8,7 @@ const db = mysql.createPool({
     password: process.env.PASSWORD,
     database: process.env.DB_NAME,
 
+    decimalNumbers: true,
     connectTimeout: 10000,
     waitForConnections: true,
 });
