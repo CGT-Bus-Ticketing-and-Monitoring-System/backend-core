@@ -20,5 +20,5 @@ jobs:
                     cd ~/backend/backend-core
                     git pull origin main
                     npm install 
-                    pm2 restart passenger-backend
+                    pm2 restart complete-backend
 
