@@ -9,7 +9,18 @@ class Operator {
         this.email = data.email;
         this.phone = data.phone;
         this.status = data.status;
-        this.no_of_buses = data.no_of_buses || 0; // From the subquery
+        this.no_of_buses = data.no_of_buses || 0;
+    }
+
+    
+    static findByUsername(username) {
+        return new Promise((resolve, reject) => {
+            const query = `SELECT * FROM Operator WHERE username = ?`;
+            db.query(query, [username], (err, results) => {
+                if (err) return reject(err);
+                resolve(results[0]); 
+            });
+        });
     }
 
     static findAll() {
@@ -24,7 +35,7 @@ class Operator {
 
             db.query(query, (err, results) => {
                 if (err) return reject(err);
-                // Map the raw DB results into Operator class instances
+                
                 resolve(results.map(row => new Operator(row)));
             });
         });
