@@ -4,44 +4,44 @@ const jwt = require('jsonwebtoken');
 
 class OperatorService {
     
-    static async login(req, res) {
-        const { username, password } = req.body;
-
+    static async login(username, password) {
         if (!username || !password) {
-            return res.status(400).json({ message: 'Username and password are required' });
+            throw new Error('MISSING_DATA');
         }
 
-        try {
-            const operator = await Operator.findByUsername(username);
-            
-            
-            if (!operator || operator.status !== 'ACTIVE') {
-                return res.status(401).json({ message: 'Invalid username or password' });
-            }
-
-            
-            const isMatch = await bcrypt.compare(password, operator.password_hash);
-            if (!isMatch) {
-                return res.status(401).json({ message: 'Invalid username or password' });
-            }
-
-            
-            const token = jwt.sign(
-                { operatorId: operator.operator_id, role: 'operator' },
-                process.env.JWT_SECRET || 'default_secret_key',
-                { expiresIn: '8h' }
-            );
-
-            res.status(200).json({
-                message: 'Login successful',
-                token: token,
-                fname: operator.fname,
-                username: operator.username
-            });
-        } catch (error) {
-            console.error('Operator login error:', error);
-            res.status(500).json({ error: 'Server error during login' });
+        const operator = await Operator.findByUsername(username);
+        
+        if (!operator || operator.status !== 'ACTIVE') {
+            throw new Error('INVALID_CREDENTIALS');
         }
+
+        const isMatch = await bcrypt.compare(password, operator.password_hash);
+        if (!isMatch) {
+            throw new Error('INVALID_CREDENTIALS');
+        }
+
+        const token = jwt.sign(
+            { operatorId: operator.operator_id, role: 'operator' },
+            process.env.JWT_SECRET || 'default_secret_key',
+            { expiresIn: '8h' }
+        );
+
+        return {
+            message: 'Login successful',
+            token: token,
+            fname: operator.fname,
+            operator_id: operator.operator_id
+        };
+    }
+
+    static async getProfile(operatorId) {
+        const operator = await Operator.findById(operatorId);
+        if (!operator) {
+            throw new Error('NOT_FOUND');
+        }
+        
+        delete operator.password_hash; 
+        return operator;
     }
 
     
