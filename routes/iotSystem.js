@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const Bus = require('../models/Bus');
 
 // /tap is the main entry
 
@@ -198,6 +199,30 @@ router.post('/tap' , (req,res) => {
 
         });
     });
+});
+
+//Location Fetching logic
+router.post('/update-location', async (req, res) => {
+    try {
+        
+        const { bus_id, latitude, longitude } = req.body;
+
+        if (!bus_id || !latitude || !longitude) {
+            return res.status(400).json({ error: "Missing parameters" });
+        }
+
+        await Bus.updateLocation(bus_id, latitude, longitude);
+
+        res.json({
+            message: "Location updated successfully"
+        });
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            error: "Server error"
+        });
+    }
 });
 
 module.exports = router;
