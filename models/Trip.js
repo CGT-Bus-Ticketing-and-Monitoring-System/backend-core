@@ -76,6 +76,7 @@ router.get("/history/:passengerId", (req , res) => {
     WHERE 
         t.passenger_id = ?
         AND t.status = 'COMPLETED'
+    ORDER BY end_time DESC
   `;
 
   db.query(sql, [passengerId], (err, results) => {
