@@ -146,5 +146,86 @@ class Admin {
             });
         });
     }
+
+    
+    //admin-mngmnt
+  constructor(data) {
+        this.admin_id = data.admin_id;
+        this.fname = data.fname;
+        this.lname = data.lname;
+        this.username = data.username;
+        this.email = data.email;
+        this.phone = data.phone;
+        this.status = data.status || 'ACTIVE';
+    }
+
+    static findByUsername(username) {
+        return new Promise((resolve, reject) => {
+            const query = 'SELECT * FROM `Admin` WHERE username = ?'; 
+            db.query(query, [username], (err, results) => {
+                if (err) return reject(err);
+                resolve(results[0]); 
+            });
+        });
+    }
+
+    static findAll() {
+        return new Promise((resolve, reject) => {
+            const query = "SELECT admin_id, fname, lname, username, email, phone, status FROM `Admin` WHERE status = 'ACTIVE' ORDER BY admin_id DESC";
+            db.query(query, (err, results) => {
+                if (err) return reject(err);
+                resolve(results.map(row => new Admin(row)));
+            });
+        });
+    }
+
+    static create(data) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                INSERT INTO \`Admin\` (fname, lname, username, email, phone, password_hash) 
+                VALUES (?, ?, ?, ?, ?, ?)
+            `;
+            const params = [data.fname, data.lname, data.username, data.email, data.phone, data.password_hash];
+
+            db.query(query, params, (err, results) => {
+                if (err) return reject(err);
+                resolve(results.insertId);
+            });
+        });
+    }
+
+    static update(id, data) {
+        return new Promise((resolve, reject) => {
+            let query = 'UPDATE `Admin` SET fname = ?, lname = ?, username = ?, email = ?, phone = ?';
+            let params = [data.fname, data.lname, data.username, data.email, data.phone];
+
+            if (data.password_hash) {
+                query += ', password_hash = ?';
+                params.push(data.password_hash);
+            }
+
+            query += ' WHERE admin_id = ?';
+            params.push(id);
+
+            db.query(query, params, (err, results) => {
+                if (err) return reject(err);
+                resolve(results.affectedRows > 0);
+            });
+        });
+    }
+
+    static deactivate(id) {
+        return new Promise((resolve, reject) => {
+            const query = "UPDATE `Admin` SET status = 'INACTIVE' WHERE admin_id = ?";
+            db.query(query, [id], (err, results) => {
+                if (err) return reject(err);
+                resolve(results.affectedRows > 0);
+            });
+        });
+    }
 }
+
+
+
+
 module.exports = Admin;
