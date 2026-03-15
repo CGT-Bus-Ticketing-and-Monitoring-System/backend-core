@@ -10,6 +10,7 @@ class Trip {
     this.start_time = data.start_time;
     this.end_time = data.end_time;
     this.status = data.status;
+    this.route_code = data.route_code;
   }
 
   static async getActiveTrips(passengerId){
@@ -20,7 +21,8 @@ class Trip {
             t.status,
             b.registration_number,
             r.start_location,
-            r.end_location
+            r.end_location,
+            r.route_code
         FROM Trip t
         INNER JOIN Bus b 
             ON t.bus_id = b.bus_id
@@ -46,7 +48,8 @@ class Trip {
             t.status,
             b.registration_number,
             r.start_location,
-            r.end_location
+            r.end_location,
+            r.route_code
           FROM Trip t
           INNER JOIN Bus b 
               ON t.bus_id = b.bus_id
@@ -55,6 +58,7 @@ class Trip {
           WHERE 
               t.passenger_id = ?
               AND t.status = 'COMPLETED'
+          ORDER BY t.start_time DESC;
         `;
 
         db.query(sql_his , [passengerId] , (err,results) => {
@@ -73,7 +77,8 @@ class Trip {
             t.status,
             b.registration_number,
             r.start_location,
-            r.end_location
+            r.end_location,
+            r.route_code
           FROM Trip t
           INNER JOIN Bus b 
               ON t.bus_id = b.bus_id
@@ -82,6 +87,7 @@ class Trip {
           WHERE 
               t.passenger_id = ?
               AND t.status = 'CANCELLED'
+          ORDER BY t.start_time DESC;
         `;
 
         db.query(sql_cancle, [passengerId], (err , results) => {
