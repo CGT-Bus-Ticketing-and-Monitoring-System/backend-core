@@ -23,6 +23,16 @@ class Operator {
         });
     }
 
+    static findById(operatorId) {
+        return new Promise((resolve, reject) => {
+            const query = 'SELECT * FROM Operator WHERE operator_id = ?';
+            db.query(query, [operatorId], (err, results) => {
+                if (err) return reject(err);
+                resolve(results[0] || null);
+            });
+        });
+    }
+
     static findAll() {
         return new Promise((resolve, reject) => {
             const query = `
