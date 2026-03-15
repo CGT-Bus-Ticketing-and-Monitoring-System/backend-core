@@ -1,137 +1,45 @@
-const express = require("express");
-const router = express.Router();
 const db = require("../config/db");
 
-router.get("/active/:passengerId", (req, res) => {
+//Basic OOP? :0
 
-  const passengerId = Number(req.params.passengerId);
-  if (NaN) {
-    return res.status(400).json({success: false, message: "Invalid Passenger ID"});
+class Trip {
+  constructor(data) {
+    this.trip_id = data.trip_id;
+    this.passenger_id = data.passenger_id;
+    this.bus_id = data.bus_id;
+    this.start_time = data.start_time;
+    this.end_time = data.end_time;
+    this.status = data.status;
   }
 
-  const sql = `
-    SELECT 
-        t.start_time,
-        t.status,
-        b.registration_number,
-        r.start_location,
-        r.end_location
-    FROM Trip t
-    INNER JOIN Bus b 
-        ON t.bus_id = b.bus_id
-    INNER JOIN Route r 
-        ON b.route_id = r.route_id
-    WHERE 
-        t.passenger_id = ?
-        AND t.status = 'ACTIVE'
-  `;
-
-  db.query(sql, [passengerId], (err, results) => {
-
-    if (err) {
-      console.error(err);
-      return res.status(500).json({
-        success: false,
-        message: "Database error"
-      });
-    }
-
-    // If no active trip
-    if (results.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No active trip found"
-      });
-    }
-
-    
-    res.json({
-      success: true,
-      data: results[0] 
+  static async getActiveTrips(passengerId){
+    return new Promise((resolve , reject) => {
+      const sql = `
+        SELECT 
+            t.start_time,
+            t.status,
+            b.registration_number,
+            r.start_location,
+            r.end_location
+        FROM Trip t
+        INNER JOIN Bus b 
+            ON t.bus_id = b.bus_id
+        INNER JOIN Route r 
+            ON b.route_id = r.route_id
+        WHERE 
+            t.passenger_id = ?
+            AND t.status = 'ACTIVE'
+        `;
+      
+        db.query(sql, [passengerId] , (err,results) => {
+          if(err) reject(err);
+          resolve(results);
+        });
     });
 
-  });
-
-});
-
-router.get("/history/:passengerId", (req , res) => {
-  const passengerId = Number(req.params.passengerId);
-
-  if (isNaN(passengerId)) {
-    return res.status(400).json({ success: false, message: "Invalid passenger ID" });
   }
 
-  const sql = `
-    SELECT 
-      t.start_time,
-      t.status,
-      b.registration_number,
-      r.start_location,
-      r.end_location
-    FROM Trip t
-    INNER JOIN Bus b 
-        ON t.bus_id = b.bus_id
-    INNER JOIN Route r 
-        ON b.route_id = r.route_id
-    WHERE 
-        t.passenger_id = ?
-        AND t.status = 'COMPLETED'
-    ORDER BY end_time DESC
-  `;
 
-  db.query(sql, [passengerId], (err, results) => {
-    if (err) {
-      console.error(err);
-    return res.status(500).json({ success: false, message: "Database error" });
-    }
+}
 
-    if (results.length === 0) {
-      return res.status(404).json({ success: false, message: "No trip history found" });
-  }
-
-    res.json({ success: true, data: results });
-  });
-
-});
-
-
-router.get("/cancel/:passengerId", (req, res) => {
-  const passengerId = Number(req.params.passengerId);
-
-  if (isNaN(passengerId)) {
-    return res.status(400).json({ success: false, message: "Invalid passenger ID" });
-  }
-
-  const sql = `
-    SELECT 
-      t.start_time,
-      t.status,
-      b.registration_number,
-      r.start_location,
-      r.end_location
-    FROM Trip t
-    INNER JOIN Bus b 
-        ON t.bus_id = b.bus_id
-    INNER JOIN Route r 
-        ON b.route_id = r.route_id
-    WHERE 
-        t.passenger_id = ?
-        AND t.status = 'CANCELLED'
-  `;
-
-  db.query(sql, [passengerId], (err, results) => {
-    if (err) {
-      console.error(err);
-    return res.status(500).json({ success: false, message: "Database error" });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ success: false, message: "No trip history found" });
-  }
-
-    res.json({ success: true, data: results });
-  });
-
-})
-
-module.exports = router;
+module.exports = Trip;
