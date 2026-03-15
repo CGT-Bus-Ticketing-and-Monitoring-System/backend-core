@@ -81,10 +81,10 @@ class Bus {
                     b.registration_number, 
                     b.bus_name, 
                     r.route_code,
-                    (SELECT MAX(timestamp) FROM Locationlog WHERE bus_id = b.bus_id) AS last_gps_update,
+                    (SELECT MAX(timestamp) FROM LocationLog WHERE bus_id = b.bus_id) AS last_gps_update,
                     (SELECT COUNT(*) FROM Trip WHERE bus_id = b.bus_id AND status = 'ACTIVE') AS passenger_count
                 FROM Bus b
-                LEFT JOIN route r ON b.route_id = r.route_id
+                LEFT JOIN Route r ON b.route_id = r.route_id
                 WHERE b.status = 'ACTIVE' 
                 ORDER BY b.bus_id DESC
             `;
