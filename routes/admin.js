@@ -8,6 +8,7 @@ const Admin = require('../models/Admin');
 const authMiddleware = require('../middleware/authMiddleware');
 const OperatorService = require('../services/operatorService');
 const PassengerService = require('../services/passengerService');
+const busService = require('../services/busService');
 
 //login
 router.post('/login', async (req, res) => {
@@ -198,6 +199,7 @@ router.put('/operators/deactivate/:id', authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Server Error' });
     }
 });
+
 // Passenger Routes
 router.get('/passengers', authMiddleware, async (req, res) => {
     try {
@@ -246,6 +248,7 @@ router.put('/passengers/deactivate/:id', authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Database Error' });
     }
 });
+
 //  available RFID cards dropdowns
 router.get('/available-cards', authMiddleware, async (req, res) => {
     try {
@@ -271,6 +274,23 @@ router.post('/passengers/replace-card', authMiddleware, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Database Error' });
+    }
+});
+
+// Current Running Bus Status
+router.get('/bus-status', authMiddleware, async (req, res) => {
+    try {
+        const buses = await busService.getLiveBusStatus();
+        
+        res.status(200).json(buses);
+        
+    } catch (error) {
+        console.error('Route Error fetching bus status:', error.message);
+        
+        if (error.message === 'DATABASE_ERROR') {
+            return res.status(500).json({ error: 'Database error fetching bus status' });
+        }
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
