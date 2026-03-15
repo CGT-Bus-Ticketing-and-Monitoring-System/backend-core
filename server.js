@@ -5,7 +5,7 @@ require('dotenv').config();
 
 
 const passengerRoutes = require('./routes/passenger');
-const tripRoutes = require('./models/Trip');
+const tripSysRoutes = require('./routes/TripSystem');
 const adminRoutes = require('./routes/admin');
 const operatorRoutes = require('./routes/operator');
 const iotSystemRoutes = require('./routes/iotSystem');
@@ -21,7 +21,7 @@ app.use(bodyParser.json());
 
 
 app.use('/api/passenger', passengerRoutes);
-app.use('/api/trip', tripRoutes);
+app.use('/api/trip', tripSysRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/operator',operatorRoutes);
 app.use('/api/iotSystem', iotSystemRoutes);
