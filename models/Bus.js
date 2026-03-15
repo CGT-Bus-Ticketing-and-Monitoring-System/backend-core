@@ -72,6 +72,31 @@ class Bus {
             });
         });
     }
+
+    // Method to get current running buses with their details
+    static getAllBusesWithDetails() {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT 
+                    b.registration_number, 
+                    b.bus_name, 
+                    r.route_code,
+                    (SELECT MAX(timestamp) FROM locationlog WHERE bus_id = b.bus_id) AS last_gps_update,
+                    (SELECT COUNT(*) FROM trip WHERE bus_id = b.bus_id AND status = 'ACTIVE') AS passenger_count
+                FROM bus b
+                LEFT JOIN route r ON b.route_id = r.route_id
+                WHERE b.status = 'ACTIVE' 
+                ORDER BY b.bus_id DESC
+            `;
+
+            db.query(query, (err, results) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(results); 
+            });
+        });
+    }
 }
 
 module.exports = Bus;
