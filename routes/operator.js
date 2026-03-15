@@ -39,7 +39,48 @@ router.get('/profile', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'Operator not found' });
         }
         res.status(500).json({ error: 'Server Error' });
+    }   
+});
+  
+
+router.get('/my-buses/:id', async (req, res) => {
+    try {
+        const buses = await OperatorService.getMyBuses(req.params.id);
+        
+        console.log(`Buses found for operator ${req.params.id}:`, buses.length);
+        
+        res.status(200).json(buses);
+    } catch (error) {
+        console.error("Route Error:", error.message);
+        res.status(500).json({ message: "Error fetching buses", error: error.message });
     }
 });
 
+
+
+router.post('/create-bus', async (req, res) => {
+    try {
+        const result = await OperatorService.createBus(req.body);
+        res.status(201).json({ message: "Bus created successfully", id: result.insertId });
+    } catch (error) {
+        console.error("Route Error:", error.message);
+        res.status(500).json({ message: "Error saving bus", error: error.message });
+    }
+});
+
+router.delete('/delete-bus/:id', async (req, res) => {
+    console.log(">>> DELETE REQUEST RECEIVED FOR ID:", req.params.id); 
+    try {
+        if (!OperatorService) {
+            throw new Error("OperatorService is not defined! Check your imports at the top.");
+        }
+        await OperatorService.deleteBus(req.params.id);
+        console.log(">>> DELETE SUCCESSFUL");
+        res.status(200).json({ message: "Deleted" });
+    } catch (error) {
+        console.log(">>> !!! DELETE FAILED !!!");
+        console.error("FULL ERROR:", error); 
+        res.status(500).json({ error: error.message });
+    }
+});
 module.exports = router;
