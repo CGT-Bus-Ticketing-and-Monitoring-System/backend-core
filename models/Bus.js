@@ -109,6 +109,11 @@ class Bus {
             });
         });
     }
+
+    static async getActiveBuses() {
+        const [rows] = await db.promise().execute("SELECT bus_id, bus_name FROM Bus WHERE status = 'ACTIVE'");
+        return rows;
+    }
 }
 
 module.exports = Bus;

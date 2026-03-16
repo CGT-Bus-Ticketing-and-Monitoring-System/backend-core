@@ -9,9 +9,10 @@ const authMiddleware = require('../middleware/authMiddleware');
 const OperatorService = require('../services/operatorService');
 const PassengerService = require('../services/passengerService');
 const busService = require('../services/busService');
-
+const scheduleService = require('../services/scheduleService');
 const AdminService = require('../services/adminService');
 const CardService = require('../services/cardService');
+const routeService = require('../services/routeService'); // Add this import!
 
 //login
 router.post('/login', async (req, res) => {
@@ -396,5 +397,71 @@ router.put('/cards/status/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// Get all active routes for dropdowns
+router.get('/routes', authMiddleware, async (req, res) => {
+    try {
+        const routes = await routeService.getActiveRoutes();
+        res.status(200).json(routes);
+    } catch (error) {
+        console.error('Error fetching routes:', error);
+        res.status(500).json({ error: 'Failed to fetch routes' });
+    }
+});
+
+// Get all active buses for dropdowns
+router.get('/buses', authMiddleware, async (req, res) => {
+    try {
+        const buses = await busService.getActiveBuses();
+        res.status(200).json(buses);
+    } catch (error) {
+        console.error('Error fetching buses:', error);
+        res.status(500).json({ error: 'Failed to fetch buses' });
+    }
+});
+
+// Get schedules for a specific route and bus
+router.get('/schedules/:routeId/:busId', authMiddleware, async (req, res) => {
+    try {
+        const { routeId, busId } = req.params;
+        const schedules = await scheduleService.getSchedules(routeId, busId);
+        res.json(schedules);
+    } catch (error) {
+        console.error('Error fetching schedules:', error);
+        res.status(500).json({ error: 'Failed to fetch schedules' });
+    }
+});
+
+// Create a new schedule
+router.post('/schedules', authMiddleware, async (req, res) => {
+    try {
+        const newScheduleId = await scheduleService.createSchedule(req.body);
+        res.status(201).json({ message: 'Schedule added', id: newScheduleId });
+    } catch (error) {
+        console.error('Error creating schedule:', error);
+        res.status(500).json({ error: 'Failed to add schedule' });
+    }
+});
+
+// Update a schedule
+router.put('/schedules/:id', authMiddleware, async (req, res) => {
+    try {
+        await scheduleService.updateSchedule(req.params.id, req.body);
+        res.status(200).json({ message: 'Schedule updated successfully' });
+    } catch (error) {
+        console.error('Error updating schedule:', error);
+        res.status(500).json({ error: 'Failed to update schedule' });
+    }
+});
+
+// Delete a schedule
+router.delete('/schedules/:id', authMiddleware, async (req, res) => {
+    try {
+        await scheduleService.deleteSchedule(req.params.id);
+        res.status(200).json({ message: 'Schedule deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting schedule:', error);
+        res.status(500).json({ error: 'Failed to delete schedule' });
+    }
+});
 
 module.exports = router;

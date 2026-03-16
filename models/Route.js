@@ -98,6 +98,11 @@ class Route {
             });
         });
     }
+
+    static async getActiveRoutes() {
+        const [rows] = await db.promise().execute("SELECT route_id, route_code FROM Route WHERE status = 'ACTIVE'");
+        return rows;
+    }
 }
 
 module.exports = Route;
