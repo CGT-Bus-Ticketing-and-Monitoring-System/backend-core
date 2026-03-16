@@ -41,6 +41,7 @@ class Bus {
             db.query(query, (err, results) => {
                 if (err) reject(err);
                 resolve(results);
+                console.log("Query Running");
             });
         });
    }
