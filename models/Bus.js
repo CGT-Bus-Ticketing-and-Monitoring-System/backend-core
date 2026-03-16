@@ -32,19 +32,18 @@ class Bus {
                         WHERE t.bus_id = b.bus_id
                         AND t.status = 'ACTIVE'
                     ) AS active_passengers
+
                 FROM Bus b
                 JOIN Route r ON b.route_id = r.route_id
 
-                JOIN (
-                    SELECT bus_id, MAX(timestamp) AS max_ts
+                LEFT JOIN LocationLog l
+                ON l.id = (
+                    SELECT id
                     FROM LocationLog
-                    GROUP BY bus_id
-                ) latest 
-                ON b.bus_id = latest.bus_id
-
-                JOIN LocationLog l
-                ON l.bus_id = latest.bus_id
-                AND l.timestamp = latest.max_ts
+                    WHERE bus_id = b.bus_id
+                    ORDER BY timestamp DESC
+                    LIMIT 1
+                )
 
                 WHERE b.status = 'ACTIVE'
             `;
