@@ -86,7 +86,7 @@ class Route {
     static getDropdownData() {
         return new Promise((resolve, reject) => {
             const routesQuery = `SELECT route_id, route_code, start_location, end_location FROM Route WHERE status = 'ACTIVE'`;
-            const busQuery = `SELECT bus_id, registration_number FROM Bus WHERE status = 'ACTIVE'`
+            const busQuery = `SELECT bus_id, registration_number FROM Bus WHERE status = 'ACTIVE' AND route_id IS NULL`;
 
             db.query(routesQuery, (err, routes) => {
                 if (err) return reject(err);
