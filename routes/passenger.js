@@ -3,6 +3,7 @@ const router = express.Router();
 
 const passengerService = require('../services/passengerService');
 const busService = require('../services/busService');
+const routeService = require('../services/routeService');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // Route to get the latest location of the buses
@@ -77,6 +78,15 @@ router.get('/profile', authMiddleware, async (req, res) => {
         res.json(userProfile);
     } catch (error) {
         res.status(error.status || 500).json({message: error.message || 'Server Error'});
+    }
+});
+
+router.get('/busRoutes', async (req, res) => {
+    try {
+        const routes = await routeService.getActiveBusRoutes();
+        res.json(routes);
+    } catch (error) {
+        res.status(500).json({ error: 'Server Error case ' });
     }
 });
 
