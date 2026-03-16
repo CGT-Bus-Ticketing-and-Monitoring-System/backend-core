@@ -29,7 +29,7 @@ class Bus {
                     (SELECT COUNT(*) FROM Trip t WHERE t.bus_id = b.bus_id AND t.status = 'ACTIVE') AS active_passengers
                 FROM Bus b
                 JOIN Route r ON b.route_id = r.route_id
-                JOIN LocationLog l ON b.bus_id = l.bus_id
+                LEFT JOIN LocationLog l ON b.bus_id = l.bus_id
                 WHERE b.status = 'ACTIVE'
                 AND l.timestamp = (
                     SELECT MAX(timestamp)
