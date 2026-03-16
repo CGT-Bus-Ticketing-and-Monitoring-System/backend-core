@@ -98,6 +98,22 @@ class Route {
             });
         });
     }
+
+    static async getAllBusRoutes(){
+        return new Promise((resolve , reject) => {
+            const sql_bus =`
+            SELECT route_code , start_location , end_location
+            FROM Route WHERE status = 'ACTIVE';
+            `;
+
+            db.query(sql_bus , (err,results) => {
+                if(err) return reject(err);
+                resolve(results);
+            });
+        });
+    }
+
+
 }
 
 module.exports = Route;
