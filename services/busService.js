@@ -15,9 +15,9 @@ async function getLiveBusStatus() {
     }
 }
 
-async function getActiveBuses() {
+async function getActiveStatusBuses() {
     try {
-        return await Bus.getActiveBuses();
+        return await Bus.getActiveStatusBuses();
     } catch (error) {
         console.error('Error fetching active buses:', error);
         throw new Error('DATABASE_ERROR');
@@ -27,5 +27,5 @@ async function getActiveBuses() {
 module.exports = {
     getActiveMapBuses,
     getLiveBusStatus,
-    getActiveBuses
+    getActiveStatusBuses
 };
