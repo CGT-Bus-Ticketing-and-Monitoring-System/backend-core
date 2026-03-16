@@ -411,7 +411,7 @@ router.get('/routes', authMiddleware, async (req, res) => {
 // Get all active buses for dropdowns
 router.get('/buses', authMiddleware, async (req, res) => {
     try {
-        const buses = await busService.getActiveBuses();
+        const buses = await busService.getActiveStatusBuses();
         res.status(200).json(buses);
     } catch (error) {
         console.error('Error fetching buses:', error);
