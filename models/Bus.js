@@ -16,7 +16,7 @@ class Bus {
    static async getActiveBuses() {
         return new Promise((resolve, reject) => {
             const query = `
-                SELECT
+                SELECT 
                     b.bus_id,
                     b.bus_name AS name,
                     b.model,
@@ -26,18 +26,31 @@ class Bus {
                     r.base_fare AS price,
                     l.latitude,
                     l.longitude,
-                    (SELECT COUNT(*) FROM Trip t WHERE t.bus_id = b.bus_id AND t.status = 'ACTIVE') AS active_passengers
+                    (
+                        SELECT COUNT(*)
+                        FROM Trip t
+                        WHERE t.bus_id = b.bus_id
+                        AND t.status = 'ACTIVE'
+                    ) AS active_passengers
                 FROM Bus b
                 JOIN Route r ON b.route_id = r.route_id
-                JOIN LocationLog l ON b.bus_id = l.bus_id
-                WHERE b.status = 'ACTIVE'
-                AND l.timestamp = (
-                    SELECT MAX(timestamp)
+
+                JOIN (
+                    SELECT bus_id, MAX(timestamp) AS max_ts
                     FROM LocationLog
-                    WHERE bus_id = b.bus_id
-                )`;
+                    GROUP BY bus_id
+                ) latest 
+                ON b.bus_id = latest.bus_id
+
+                JOIN LocationLog l
+                ON l.bus_id = latest.bus_id
+                AND l.timestamp = latest.max_ts
+
+                WHERE b.status = 'ACTIVE'
+            `;
 
             db.query(query, (err, results) => {
+                console.log("Query Running");
                 if (err) reject(err);
                 resolve(results);
             });

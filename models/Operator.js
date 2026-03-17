@@ -95,6 +95,50 @@ class Operator {
             });
         });
     }
+
+    static findBusesByOperator(operatorId) {
+        return new Promise((resolve, reject) => {
+            
+           const query = `SELECT * FROM Bus WHERE operator_id = ?`;
+            
+            db.query(query, [operatorId], (err, results) => {
+                if (err) return reject(err);
+                resolve(results); 
+            });
+        });
+    }
+
+    static createBus(busData) {
+    return new Promise((resolve, reject) => {
+        const query = `INSERT INTO Bus (bus_name, model, registration_number, capacity, operator_id, status) VALUES (?, ?, ?, ?, ?, ?)`;
+        const values = [
+            busData.bus_name, 
+            busData.model, 
+            busData.registration_number, 
+            busData.capacity, 
+            busData.operator_id, 
+            busData.status || 'ACTIVE'
+        ];
+
+        db.query(query, values, (err, result) => {
+            if (err) return reject(err);
+            resolve(result);
+        });
+    });
+
+    
 }
+
+static deleteBus(busId) {
+    return new Promise((resolve, reject) => {
+        const query = `DELETE FROM Bus WHERE bus_id = ?`; 
+        db.query(query, [busId], (err, result) => {
+            if (err) return reject(err);
+            resolve(result);
+        });
+    });
+}
+}
+
 
 module.exports = Operator;

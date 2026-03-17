@@ -8,6 +8,11 @@ const Admin = require('../models/Admin');
 const authMiddleware = require('../middleware/authMiddleware');
 const OperatorService = require('../services/operatorService');
 const PassengerService = require('../services/passengerService');
+const busService = require('../services/busService');
+const scheduleService = require('../services/scheduleService');
+const AdminService = require('../services/adminService');
+const CardService = require('../services/cardService');
+const routeService = require('../services/routeService'); // Add this import!
 
 //login
 router.post('/login', async (req, res) => {
@@ -198,6 +203,7 @@ router.put('/operators/deactivate/:id', authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Server Error' });
     }
 });
+
 // Passenger Routes
 router.get('/passengers', authMiddleware, async (req, res) => {
     try {
@@ -246,6 +252,7 @@ router.put('/passengers/deactivate/:id', authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Database Error' });
     }
 });
+
 //  available RFID cards dropdowns
 router.get('/available-cards', authMiddleware, async (req, res) => {
     try {
@@ -271,6 +278,189 @@ router.post('/passengers/replace-card', authMiddleware, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Database Error' });
+    }
+});
+
+// Current Running Bus Status
+router.get('/bus-status', authMiddleware, async (req, res) => {
+    try {
+        const buses = await busService.getLiveBusStatus();
+        
+        res.status(200).json(buses);
+        
+    } catch (error) {
+        console.error('Route Error fetching bus status:', error.message);
+        
+        if (error.message === 'DATABASE_ERROR') {
+            return res.status(500).json({ error: 'Database error fetching bus status' });
+        }
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+//admin-mngment
+router.get('/manage', authMiddleware, async (req, res) => {
+    try {
+        const admins = await AdminService.getAllAdmins();
+        res.status(200).json(admins);
+    } catch (error) {
+        console.error('Error fetching admins:', error);
+        res.status(500).json({ message: 'Server error fetching admins' });
+    }
+});
+
+
+router.post('/manage/register', authMiddleware, async (req, res) => {
+    try {
+        const { fname, lname, username, email, phone, password } = req.body;
+        if (!fname || !username || !password) {
+            return res.status(400).json({ message: 'First name, username, and password are required' });
+        }
+
+        const newId = await AdminService.registerAdmin(req.body);
+        res.status(201).json({ message: 'Admin registered successfully', admin_id: newId });
+        
+    } catch (error) {
+        console.error('Error registering admin:', error);
+        if (error.message === 'Username is already taken') {
+            return res.status(409).json({ message: error.message });
+        }
+        res.status(500).json({ message: 'Server error registering admin' });
+    }
+});
+
+
+router.put('/manage/update/:id', authMiddleware, async (req, res) => {
+    try {
+        await AdminService.updateAdmin(req.params.id, req.body);
+        res.status(200).json({ message: 'Admin updated successfully' });
+    } catch (error) {
+        console.error('Error updating admin:', error);
+        res.status(400).json({ message: error.message || 'Server error updating admin' });
+    }
+});
+
+
+router.put('/manage/deactivate/:id', authMiddleware, async (req, res) => {
+    try {
+        await AdminService.deactivateAdmin(req.params.id);
+        res.status(200).json({ message: 'Admin deactivated successfully' });
+    } catch (error) {
+        console.error('Error deactivating admin:', error);
+        res.status(400).json({ message: error.message || 'Server error deactivating admin' });
+    }
+});
+
+
+//rfid-cards
+router.get('/cards', authMiddleware, async (req, res) => {
+    try {
+        const cards = await CardService.getAllCards();
+        res.status(200).json(cards);
+    } catch (error) {
+        console.error('Error fetching cards:', error);
+        res.status(500).json({ message: 'Server error fetching cards' });
+    }
+});
+
+
+router.post('/cards/register', authMiddleware, async (req, res) => {
+    try {
+        const { rfid_uid } = req.body;
+        if (!rfid_uid) {
+            return res.status(400).json({ message: 'RFID UID is required' });
+        }
+
+        const newId = await CardService.issueCard(rfid_uid);
+        res.status(201).json({ message: 'Card registered successfully', card_id: newId });
+        
+    } catch (error) {
+        console.error('Error registering card:', error);
+        if (error.message === 'This RFID UID is already registered.') {
+            return res.status(409).json({ message: error.message });
+        }
+        res.status(500).json({ message: 'Server error registering card' });
+    }
+});
+
+// updating Card Status (Block/Activate)
+router.put('/cards/status/:id', authMiddleware, async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!status) return res.status(400).json({ message: 'Status is required' });
+
+        await CardService.changeCardStatus(req.params.id, status);
+        res.status(200).json({ message: `Card status updated to ${status}` });
+    } catch (error) {
+        console.error('Error updating card status:', error);
+        res.status(400).json({ message: error.message || 'Server error updating card' });
+    }
+});
+
+// Get all active routes for dropdowns
+router.get('/routes', authMiddleware, async (req, res) => {
+    try {
+        const routes = await routeService.getActiveRoutes();
+        res.status(200).json(routes);
+    } catch (error) {
+        console.error('Error fetching routes:', error);
+        res.status(500).json({ error: 'Failed to fetch routes' });
+    }
+});
+
+// Get all active buses for dropdowns
+router.get('/buses', authMiddleware, async (req, res) => {
+    try {
+        const buses = await busService.getActiveStatusBuses();
+        res.status(200).json(buses);
+    } catch (error) {
+        console.error('Error fetching buses:', error);
+        res.status(500).json({ error: 'Failed to fetch buses' });
+    }
+});
+
+// Get schedules for a specific route and bus
+router.get('/schedules/:routeId/:busId', authMiddleware, async (req, res) => {
+    try {
+        const { routeId, busId } = req.params;
+        const schedules = await scheduleService.getSchedules(routeId, busId);
+        res.json(schedules);
+    } catch (error) {
+        console.error('Error fetching schedules:', error);
+        res.status(500).json({ error: 'Failed to fetch schedules' });
+    }
+});
+
+// Create a new schedule
+router.post('/schedules', authMiddleware, async (req, res) => {
+    try {
+        const newScheduleId = await scheduleService.createSchedule(req.body);
+        res.status(201).json({ message: 'Schedule added', id: newScheduleId });
+    } catch (error) {
+        console.error('Error creating schedule:', error);
+        res.status(500).json({ error: 'Failed to add schedule' });
+    }
+});
+
+// Update a schedule
+router.put('/schedules/:id', authMiddleware, async (req, res) => {
+    try {
+        await scheduleService.updateSchedule(req.params.id, req.body);
+        res.status(200).json({ message: 'Schedule updated successfully' });
+    } catch (error) {
+        console.error('Error updating schedule:', error);
+        res.status(500).json({ error: 'Failed to update schedule' });
+    }
+});
+
+// Delete a schedule
+router.delete('/schedules/:id', authMiddleware, async (req, res) => {
+    try {
+        await scheduleService.deleteSchedule(req.params.id);
+        res.status(200).json({ message: 'Schedule deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting schedule:', error);
+        res.status(500).json({ error: 'Failed to delete schedule' });
     }
 });
 
