@@ -72,6 +72,30 @@ class Bus {
             });
         });
     }
+
+    static async updateBusById(bus_id, operator_id, data) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                UPDATE Bus
+                SET bus_name = ?, model = ?, registration_number = ?, capacity = ?
+                WHERE bus_id = ? AND operator_id = ?
+            `;
+
+            const params = [
+                data.bus_name,
+                data.model,
+                data.registration_number,
+                data.capacity,
+                bus_id,
+                operator_id
+            ];
+
+            db.query(query, params, (err, results) => {
+                if (err) return reject(err);
+                resolve(results.affectedRows > 0);
+            });
+        });
+    }
 }
 
 module.exports = Bus;
