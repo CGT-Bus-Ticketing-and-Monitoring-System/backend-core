@@ -240,14 +240,15 @@ class OperatorService {
             throw error;
         }
     }
-}
-
-static async deleteBus(busId) {
-    try {
-        return await Operator.deleteBus(busId); 
-    } catch (error) {
-        throw error;
+    static async deleteBus(busId) {
+        try {
+            return await Operator.deleteBus(busId); 
+        } catch (error) {
+            throw error;
+        }
     }
 }
-}
+
+
+
 module.exports = OperatorService;
