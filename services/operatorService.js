@@ -1,5 +1,6 @@
 const Operator = require('../models/Operator');
 const Transaction = require('../models/Transaction');
+const Bus = require('../models/Bus');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -62,6 +63,10 @@ class OperatorService {
         const operator = await Operator.findByUsername(username);
         
         if (!operator || operator.status !== 'ACTIVE') {
+            throw new Error('INVALID_CREDENTIALS');
+        }
+
+        if (!operator.password_hash) {
             throw new Error('INVALID_CREDENTIALS');
         }
 
@@ -206,25 +211,35 @@ class OperatorService {
         }
     }
 
-    static async getMyBuses(operatorId) {
+    static async updateBus(operatorId, busId, data) {
+        if (!operatorId || !busId) {
+            throw new Error('MISSING_IDS');
+        }
+
+        const normalized = {
+            bus_name: String(data.bus_name || '').trim(),
+            model: String(data.model || '').trim(),
+            registration_number: String(data.registration_number || '').trim(),
+            capacity: Number(data.capacity)
+        };
+
+        if (!normalized.bus_name || !normalized.model || !normalized.registration_number || !Number.isFinite(normalized.capacity) || normalized.capacity <= 0) {
+            throw new Error('INVALID_BUS_DATA');
+        }
+
         try {
-            const buses = await Operator.findBusesByOperator(operatorId);
-            return buses;
+            const updated = await Bus.updateBusById(Number(busId), Number(operatorId), normalized);
+            if (!updated) {
+                throw new Error('BUS_NOT_FOUND_OR_FORBIDDEN');
+            }
+            return true;
         } catch (error) {
-            console.error('Error in getMyBuses service:', error);
+            if (error && error.code === 'ER_DUP_ENTRY') {
+                throw new Error('DUPLICATE_REGISTRATION_NUMBER');
+            }
             throw error;
         }
     }
-
-    static async createBus(busData) {
-    try {
-        return await Operator.createBus(busData);
-    } catch (error) {
-        console.error('Error in createBus service:', error);
-        throw error;
-    }
-
-    
 }
 
 static async deleteBus(busId) {

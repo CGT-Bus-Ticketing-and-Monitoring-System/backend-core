@@ -86,34 +86,28 @@ class Bus {
         });
     }
 
-    // Method to get current running buses with their details
-    static getAllBusesWithDetails() {
+    static async updateBusById(bus_id, operator_id, data) {
         return new Promise((resolve, reject) => {
             const query = `
-                SELECT 
-                    b.registration_number, 
-                    b.bus_name, 
-                    r.route_code,
-                    (SELECT MAX(timestamp) FROM LocationLog WHERE bus_id = b.bus_id) AS last_gps_update,
-                    (SELECT COUNT(*) FROM Trip WHERE bus_id = b.bus_id AND status = 'ACTIVE') AS passenger_count
-                FROM Bus b
-                LEFT JOIN Route r ON b.route_id = r.route_id
-                WHERE b.status = 'ACTIVE' 
-                ORDER BY b.bus_id DESC
+                UPDATE Bus
+                SET bus_name = ?, model = ?, registration_number = ?, capacity = ?
+                WHERE bus_id = ? AND operator_id = ?
             `;
 
-            db.query(query, (err, results) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(results); 
+            const params = [
+                data.bus_name,
+                data.model,
+                data.registration_number,
+                data.capacity,
+                bus_id,
+                operator_id
+            ];
+
+            db.query(query, params, (err, results) => {
+                if (err) return reject(err);
+                resolve(results.affectedRows > 0);
             });
         });
-    }
-
-    static async getActiveStatusBuses() {
-        const [rows] = await db.promise().execute("SELECT bus_id, bus_name FROM Bus WHERE status = 'ACTIVE'");
-        return rows;
     }
 }
 

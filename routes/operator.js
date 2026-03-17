@@ -83,4 +83,33 @@ router.delete('/delete-bus/:id', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+router.put('/update-bus/:id', authMiddleware, async (req, res) => {
+    try {
+        if (req.user.role !== 'operator' || !req.user.operatorId) {
+            return res.status(403).json({ message: 'Operator access only' });
+        }
+
+        await OperatorService.updateBus(req.user.operatorId, req.params.id, req.body || {});
+        return res.status(200).json({ message: 'Bus updated successfully' });
+    } catch (error) {
+        console.error('Error updating bus:', error.message);
+
+        if (error.message === 'MISSING_IDS') {
+            return res.status(400).json({ message: 'Bus id and operator id are required' });
+        }
+        if (error.message === 'INVALID_BUS_DATA') {
+            return res.status(400).json({ message: 'Invalid bus data. Provide bus_name, model, registration_number, and positive capacity' });
+        }
+        if (error.message === 'BUS_NOT_FOUND_OR_FORBIDDEN') {
+            return res.status(404).json({ message: 'Bus not found for this operator' });
+        }
+        if (error.message === 'DUPLICATE_REGISTRATION_NUMBER') {
+            return res.status(409).json({ message: 'Registration number already exists' });
+        }
+
+        return res.status(500).json({ error: 'Server error while updating bus' });
+    }
+});
+
 module.exports = router;
