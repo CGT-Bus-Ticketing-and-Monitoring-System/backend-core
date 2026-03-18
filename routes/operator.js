@@ -39,9 +39,23 @@ router.get('/profile', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'Operator not found' });
         }
         res.status(500).json({ error: 'Server Error' });
-    }   
+    }
 });
-  
+
+router.get('/earnings', authMiddleware, async (req, res) => {
+    try {
+        const { fromDate, toDate, period } = req.query;
+        const operatorId = req.user.operatorId;
+        const earningsData = await OperatorService.getEarnings(operatorId, fromDate, toDate, period);
+        res.status(200).json(earningsData);
+    } catch (error) {
+        console.error('Error fetching earnings:', error.message);
+        if (error.message === 'MISSING_OPERATOR_ID' || error.message === 'INVALID_DATE_RANGE' || error.message === 'INVALID_DATE_FORMAT' || error.message === 'INVALID_PERIOD') {
+            return res.status(400).json({ message: error.message });
+        }
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
 
 router.get('/my-buses/:id', async (req, res) => {
     try {
