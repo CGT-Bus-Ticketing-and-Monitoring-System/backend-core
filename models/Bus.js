@@ -12,6 +12,47 @@ class Bus {
         this.status = data.status || 'ACTIVE';
     }
 
+        static async getAllBusesWithDetails() {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT 
+                    b.registration_number,
+                    b.bus_name,
+                    r.route_code,
+                    latest.max_ts AS last_gps_update,
+                    (
+                        SELECT COUNT(*)
+                        FROM Trip t
+                        WHERE t.bus_id = b.bus_id
+                        AND t.status = 'ACTIVE'
+                    ) AS passenger_count
+                FROM Bus b
+                LEFT JOIN Route r ON b.route_id = r.route_id
+                LEFT JOIN (
+                    SELECT bus_id, MAX(timestamp) AS max_ts
+                    FROM LocationLog
+                    GROUP BY bus_id
+                ) latest ON b.bus_id = latest.bus_id
+                WHERE b.status = 'ACTIVE'
+            `;
+
+            db.query(query, (err, results) => {
+                if (err) reject(err);
+                resolve(results);
+            });
+        });
+    }
+
+    static async getActiveStatusBuses() {
+        return new Promise((resolve, reject) => {
+            const query = 'SELECT bus_id, bus_name, registration_number FROM Bus WHERE status = "ACTIVE"';
+            db.query(query, (err, results) => {
+                if (err) reject(err);
+                resolve(results);
+            });
+        });
+    }
+
     // Method to get the latest location of the buses
    static async getActiveBuses() {
         return new Promise((resolve, reject) => {
