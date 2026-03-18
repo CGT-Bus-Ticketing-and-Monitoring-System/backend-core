@@ -126,11 +126,12 @@ router.put('/update-bus/:id', authMiddleware, async (req, res) => {
     }
 });
 
-//Dashboard-Operator
 
-router.get('/dashboard-summary', async (req, res) => {
+// Dashboard-Operator
+
+router.get('/dashboard-summary/:id', async (req, res) => {
     try {
-        const stats = await OperatorService.getDashboardData(req.user.operatorId);
+        const stats = await OperatorService.getDashboardData(req.params.id);
         
         if (!stats) {
             return res.status(404).json({ message: "Operator data not found" });
@@ -141,17 +142,7 @@ router.get('/dashboard-summary', async (req, res) => {
         console.error("Dashboard Route Error:", error.message);
         res.status(500).json({ error: 'Server error fetching dashboard' });
     }
-    
 });
-module.exports = router;
 
-router.get('/dashboard-summary/:id', async (req, res) => {
-    try {
-        const stats = await OperatorService.getDashboardData(req.params.id);
-        res.status(200).json(stats);
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
-}); 
 
 module.exports = router;
