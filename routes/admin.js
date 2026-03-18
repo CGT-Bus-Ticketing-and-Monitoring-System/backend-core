@@ -12,7 +12,8 @@ const busService = require('../services/busService');
 const scheduleService = require('../services/scheduleService');
 const AdminService = require('../services/adminService');
 const CardService = require('../services/cardService');
-const routeService = require('../services/routeService'); // Add this import!
+const routeService = require('../services/routeService'); 
+const ReportService = require('../services/reportService');
 
 //login
 router.post('/login', async (req, res) => {
@@ -461,6 +462,21 @@ router.delete('/schedules/:id', authMiddleware, async (req, res) => {
     } catch (error) {
         console.error('Error deleting schedule:', error);
         res.status(500).json({ error: 'Failed to delete schedule' });
+    }
+});
+
+// Summary Report 
+router.get('/reports/summary', authMiddleware, async (req, res) => {
+    console.log(`Backend hit! Requesting report for ${req.query.days} days.`);
+    
+    try {
+        const days = req.query.days || 30; 
+        const reportData = await ReportService.getSummaryReport(days);
+
+        res.status(200).json(reportData);
+    } catch (error) {
+        console.error('Error generating report:', error);
+        res.status(500).json({ error: 'Failed to generate report' });
     }
 });
 
