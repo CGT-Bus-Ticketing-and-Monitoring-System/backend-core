@@ -247,8 +247,24 @@ class OperatorService {
             throw error;
         }
     }
+
+    static async getMyBuses(operatorId) {
+        try {
+            return await Operator.findBusesByOperator(operatorId);
+        } catch (error) {
+            console.error('Error in getMyBuses:', error);
+            throw error;
+        }
+    }
+
+    static async createBus(data) {
+        try {
+            return await Operator.createBus(data);
+        } catch (error) {
+            console.error('Error in createBus:', error);
+            throw error;
+        }
+    }
 }
-
-
 
 module.exports = OperatorService;
