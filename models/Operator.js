@@ -138,6 +138,28 @@ static deleteBus(busId) {
         });
     });
 }
+//Dashboard-Operator
+static getDashboardStats(operatorId) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT 
+                    fname,
+                    (SELECT COUNT(*) FROM Bus WHERE operator_id = ?) AS total_buses,
+                    (SELECT COUNT(*) FROM Bus WHERE operator_id = ? AND status = 'ACTIVE') AS active_buses,
+                    (SELECT COUNT(*) FROM Bus WHERE operator_id = ? AND status = 'INACTIVE') AS inactive_buses,
+                    (SELECT IFNULL(SUM(fare_amount), 0) FROM Transaction WHERE operator_id = ? AND DATE(created_at) = CURDATE()) AS today_earnings
+                FROM Operator 
+                WHERE operator_id = ?
+            `;
+            const params = [operatorId, operatorId, operatorId, operatorId, operatorId];
+
+            db.query(query, params, (err, results) => {
+                if (err) return reject(err);
+                resolve(results[0]);
+            });
+        });
+    }
+
 }
 
 

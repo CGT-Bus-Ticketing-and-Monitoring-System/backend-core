@@ -265,6 +265,16 @@ class OperatorService {
             throw error;
         }
     }
+
+    //Dashboard-Operator
+    static async getDashboardData(operatorId) {
+        try {
+            return await Operator.getDashboardStats(operatorId);
+        } catch (error) {
+            console.error('Error in getDashboardData Service:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = OperatorService;
