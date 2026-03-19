@@ -1,24 +1,25 @@
 const Schedule = require('../models/Schedule');
 
-async function getSchedules(routeId, busId) {
-    return await Schedule.getSchedulesByRouteAndBus(routeId, busId);
+class ScheduleService {
+    static async getSchedulesByRoute(routeId) {
+        return await Schedule.findByRoute(routeId);
+    }
+
+    static async addSchedule(data) {
+        return await Schedule.create(data);
+    }
+
+    static async updateSchedule(id, data) {
+        const success = await Schedule.update(id, data);
+        if (!success) throw new Error('Schedule not found');
+        return success;
+    }
+
+    static async deleteSchedule(id) {
+        const success = await Schedule.delete(id);
+        if (!success) throw new Error('Schedule not found');
+        return success;
+    }
 }
 
-async function createSchedule(scheduleData) {
-    return await Schedule.addSchedule(scheduleData);
-}
-
-async function updateSchedule(id, scheduleData) {
-    return await Schedule.updateSchedule(id, scheduleData);
-}
-
-async function deleteSchedule(id) {
-    return await Schedule.deleteSchedule(id);
-}
-
-module.exports = {
-    getSchedules,
-    createSchedule,
-    updateSchedule,
-    deleteSchedule 
-};
+module.exports = ScheduleService;
