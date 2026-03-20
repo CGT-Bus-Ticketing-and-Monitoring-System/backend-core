@@ -1,40 +1,61 @@
-const db = require('../config/db'); 
+const db = require('../config/db');
 
 class Schedule {
-    // Get Schedules by Route and Bus
-    static async getSchedulesByRouteAndBus(routeId, busId) {
-        const [rows] = await db.promise().execute(
-            'SELECT * FROM BusSchedule WHERE route_id = ? AND bus_id = ? ORDER BY departure_time ASC',
-            [routeId, busId] 
-        );
-        return rows;
+    // Get all schedules for a specific route
+    static findByRoute(routeId) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT s.schedule_id, s.departure_time, s.arrival_time, s.direction, s.status, 
+                       b.registration_number, b.bus_id 
+                FROM \`BusSchedule\` s
+                LEFT JOIN \`Bus\` b ON s.bus_id = b.bus_id
+                WHERE s.route_id = ?
+                ORDER BY s.departure_time ASC
+            `;
+            db.query(query, [routeId], (err, results) => {
+                if (err) return reject(err);
+                resolve(results);
+            });
+        });
     }
 
-    // Add Schedule
-    static async addSchedule(data) {
-        const [result] = await db.promise().execute(
-            'INSERT INTO BusSchedule (bus_id, route_id, departure_time, arrival_time, direction, status) VALUES (?, ?, ?, ?, ?, ?)',
-            [data.bus_id, data.route_id, data.departure_time, data.arrival_time, data.direction, data.status]
-        );
-        return result.insertId;
+    static create(data) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                INSERT INTO \`BusSchedule\` (bus_id, route_id, departure_time, arrival_time, direction, status) 
+                VALUES (?, ?, ?, ?, ?, ?)
+            `;
+            const params = [data.bus_id, data.route_id, data.departure_time, data.arrival_time, data.direction, data.status || 'ACTIVE'];
+            
+            db.query(query, params, (err, results) => {
+                if (err) return reject(err);
+                resolve(results.insertId);
+            });
+        });
     }
 
-    // Update Schedule
-    static async updateSchedule(id, data) {
-        const [result] = await db.promise().execute(
-            'UPDATE BusSchedule SET departure_time = ?, arrival_time = ?, direction = ? WHERE schedule_id = ?',
-            [data.departure_time, data.arrival_time, data.direction, id]
-        );
-        return result.affectedRows;
+    static update(id, data) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                UPDATE \`BusSchedule\` 
+                SET departure_time = ?, arrival_time = ?, direction = ? 
+                WHERE schedule_id = ?
+            `;
+            db.query(query, [data.departure_time, data.arrival_time, data.direction, id], (err, results) => {
+                if (err) return reject(err);
+                resolve(results.affectedRows > 0);
+            });
+        });
     }
 
-    // Delete Schedule
-    static async deleteSchedule(id) {
-        const [result] = await db.promise().execute(
-            'DELETE FROM BusSchedule WHERE schedule_id = ?',
-            [id]
-        );
-        return result.affectedRows;
+    static delete(id) {
+        return new Promise((resolve, reject) => {
+            const query = 'DELETE FROM `BusSchedule` WHERE schedule_id = ?';
+            db.query(query, [id], (err, results) => {
+                if (err) return reject(err);
+                resolve(results.affectedRows > 0);
+            });
+        });
     }
 }
 

@@ -94,6 +94,62 @@ class Passenger {
             });
         });
     }
+
+    static getBasicAnalytics(passengerId) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT 
+                    COUNT(t.trip_id) AS total_trips,
+                    COALESCE(SUM(tr.fare_amount), 0) AS total_spent,
+                    COALESCE(SUM(TIMESTAMPDIFF(MINUTE, t.start_time, t.end_time)), 0) AS total_minutes
+                FROM Trip t
+                LEFT JOIN Transaction tr ON t.trip_id = tr.trip_id
+                WHERE t.passenger_id = ? AND t.status = 'COMPLETED'
+            `;
+
+            db.query(query, [passengerId], (err, results) => {
+                if (err) return reject(err);
+                resolve(results[0] || {});
+            });
+        });
+    }
+
+    static getWeeklyTripData(passengerId) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT DAYNAME(start_time) as day_name, COUNT(*) AS trip_count
+                FROM Trip
+                WHERE passenger_id = ?
+                AND start_time >= DATE(NOW() - INTERVAL 7 DAY)
+                GROUP BY DAYNAME(start_time)
+            `;
+
+            db.query(query, [passengerId], (err, results) => {
+                if (err) return reject(err);
+                resolve(results || []);
+            });
+        });
+    }
+
+    static getTopRoute(passengerId) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT r.route_code, r.start_location, r.end_location, COUNT(t.trip_id) AS route_count
+                FROM Trip t
+                JOIN Bus b ON t.bus_id = b.bus_id
+                JOIN Route r ON b.route_id = r.route_id
+                WHERE t.passenger_id = ? AND t.status = 'COMPLETED'
+                GROUP BY r.route_id
+                ORDER BY route_count DESC
+                LIMIT 1
+            `;
+
+            db.query(query, [passengerId], (err, results) => {
+                if (err) return reject(err);
+                resolve(results[0] || null);
+            });
+        });
+    }
 }
 
 module.exports = Passenger;

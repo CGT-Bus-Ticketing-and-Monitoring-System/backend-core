@@ -17,8 +17,9 @@ class Bus {
             const query = `
                 SELECT 
                     b.registration_number,
-                    b.bus_name,
                     r.route_code,
+                    r.start_location,
+                    r.end_location,
                     latest.max_ts AS last_gps_update,
                     (
                         SELECT COUNT(*)
@@ -43,7 +44,7 @@ class Bus {
         });
     }
 
-static getActiveStatusBuses() {
+    static getActiveStatusBuses() {
         return new Promise((resolve, reject) => {
             const query = "SELECT bus_id, bus_name, registration_number, route_id, status FROM `Bus` WHERE status = 'ACTIVE'";
             db.query(query, (err, results) => {
