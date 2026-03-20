@@ -151,6 +151,17 @@ class Bus {
             });
         });
     }
+
+static async updateBusStatus(busId, newStatus) {
+    return new Promise((resolve, reject) => {
+        const query = 'UPDATE `Bus` SET status = ? WHERE bus_id = ?';
+        db.query(query, [newStatus, busId], (err, results) => {
+            if (err) return reject(err);
+            resolve(results.affectedRows > 0); 
+        });
+    });
+}
+
 }
 
 module.exports = Bus;

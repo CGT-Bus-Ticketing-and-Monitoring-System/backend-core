@@ -275,6 +275,31 @@ class OperatorService {
             throw error;
         }
     }
+    static async updateMyProfile(operatorId, data) {
+        const operator = await Operator.findById(operatorId);
+        if (!operator) throw new Error('Operator not found');
+
+        let updateData = {
+            fname: data.fname,
+            lname: data.lname,
+            email: data.email,
+            phone: data.phone
+        };
+
+
+        if (data.currPassword && data.newPassword) {
+            const isMatch = await bcrypt.compare(data.currPassword, operator.password_hash);
+            if (!isMatch) {
+                throw new Error('INCORRECT_PASSWORD');
+            }
+            // Hash the new password
+            const salt = await bcrypt.genSalt(10);
+            updateData.password_hash = await bcrypt.hash(data.newPassword, salt);
+        }
+
+        return await Operator.updateProfile(operatorId, updateData);
+    }
+
 }
 
 module.exports = OperatorService;
