@@ -121,7 +121,7 @@ const getAnalyticsDashboard = async (passengerId) => {
 
         const totalTrips = basicStats.total_trips || 0;
         const totalSpent = basicStats.total_spent;
-        const totalHours = Math.round((basicStats.total_minutes || 0) / 60);
+        const totalminutes = basicStats.total_minutes || 0 ;
 
         const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -158,7 +158,7 @@ const getAnalyticsDashboard = async (passengerId) => {
             data: {
                 totalTrips: totalTrips,
                 totalSpent: totalSpent,
-                totalHours: totalHours,
+                totalminutes: totalminutes,
                 weeklyChart: chartData,
                 topRoute: topRoute,
             }
