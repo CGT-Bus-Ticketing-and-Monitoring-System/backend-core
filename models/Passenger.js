@@ -94,6 +94,45 @@ class Passenger {
             });
         });
     }
+
+    static async getBasicAnalytics(passengerId) {
+        const [rows] = await db.execute(
+            `SELECT 
+                COUNT(t.trip_id) AS total_trips,
+                SUM(tr.fare_amount) AS total_spent,
+                SUM(TIMESTAMPDIFF(MINUTE, t.start_time, t.end_time)) AS total_minutes
+             FROM Trip t
+             LEFT JOIN Transaction tr ON t.trip_id = tr.trip_id
+             WHERE t.passenger_id = ? AND t.status = 'COMPLETED'
+            `, [passengerId]
+        );
+        return rows;
+    }
+
+    static async getWeeklyTripData(passengerId) {
+        const [rows] = await db.execute(
+            `SELECT DAYNAME(start_time) as day_name, COUNT(*) AS trip_count
+             FROM Trip
+             WHERE passenger_id = ?
+             AND start_time >= DATE(NOW() - INTERVAL 7 DAY)
+             GROUP BY DAYNAME(start_time)`, [passengerId]
+        );
+        return rows;
+    }
+
+    static async getTopRoute(passengerId) {
+        const [rows] = await db.execute(
+            `SELECT r.route_code, r.start_location, r.end_location, COUNT(t.trip_id) AS route_count
+             FROM Trip t
+             JOIN Bus b ON t.bus_id = b.bus_id
+             JOIN Route r ON b.route_id = r.route_id
+             WHERE t.passenger_id = ? AND t.status = 'COMPLETED'
+             GROUP BY r.route_id
+             ORDER BY route_count DESC
+             LIMIT 1`, [passengerId]
+        );
+        return rows;
+    }
 }
 
 module.exports = Passenger;

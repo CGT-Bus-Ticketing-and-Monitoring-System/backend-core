@@ -109,11 +109,72 @@ async function getAvailableCards() {
 async function replaceCard(passengerId, newCardId) {
     return await Admin.replacePassengerCard(passengerId, newCardId);
 }
+
+const getAnalyticsDashboard = async (passengerId) => {
+    try {
+        
+        const [basicStats, weeklyDbData, topRouteData] = await Promise.all([
+            Passenger.getBasicAnalytics(passengerId),
+            Passenger.getWeeklyTripData(passengerId),
+            Passenger.getTopRoute(passengerId)
+        ]);
+
+        const totalTrips = basicStats.total_trips || 0;
+        const totalSpent = basicStats.total_spent;
+        const totalHours = Math.round((basicStats.total_minutes || 0) / 60);
+
+        const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+        const dbDaysMap = {};
+        if (weeklyDbData && weeklyDbData.length > 0) {
+            weeklyDbData.forEach(row => {
+                const shortDay = row.day_name.substring(0, 3);
+                dbDaysMap[shortDay] = row.trip_count;
+            });
+        }
+
+        const maxTrips = Math.max(...(weeklyDbData || []).map(d => d.trip_count), 1);
+
+        const chartData = daysOfWeek.map(day => {
+            const trips = dbDaysMap[day] || 0;
+
+            const heightPercent = trips === 0 ? 5 : Math.round((trips / maxTrips) * 100);
+
+            return {
+                day: day,
+                trips: trips,
+                height: `${heightPercent}%`
+            };
+        });
+
+        const topRoute = topRouteData ? {
+            code: topRouteData.route_code,
+            name: `${topRouteData.start_location} to ${topRouteData.end_location}`,
+            count: topRouteData.route_count
+        } : null;
+
+        return {
+            success: true,
+            data: {
+                totalTrips: totalTrips,
+                totalSpent: totalSpent,
+                totalHours: totalHours,
+                weeklyChart: chartData,
+                topRoute: topRoute,
+            }
+        };
+
+    } catch (error) {
+        console.error("Analytics Service Error:", error);
+        throw new Error("Failed to generate analytics dashboard");
+    }
+}
 module.exports = {
     login,
     updateProfile,
     changePassword,
     getProfile,
+    getAnalyticsDashboard,
 
     getAllPassengers,
     createPassengerAdmin,
