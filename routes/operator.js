@@ -3,6 +3,8 @@ const router = express.Router();
 
 const OperatorService = require('../services/operatorService');
 const authMiddleware = require('../middleware/authMiddleware');
+const busService = require('../services/busService');
+const bcrypt = require('bcrypt');
 
 router.post('/login', async (req, res) => {
     try {
@@ -144,5 +146,43 @@ router.get('/dashboard-summary/:id', async (req, res) => {
     }
 });
 
+
+router.put('/update-bus-status/:id', async (req, res) => {
+    try {
+        const busId = req.params.id;
+        const { status } = req.body;
+
+        if (!status || (status !== 'ACTIVE' && status !== 'INACTIVE')) {
+            return res.status(400).json({ message: 'Valid status is required' });
+        }
+
+
+        await busService.changeBusStatus(busId, status);
+        
+        res.status(200).json({ message: `Bus status updated to ${status}` });
+
+    } catch (error) {
+        console.error('Error updating bus status:', error);
+        res.status(500).json({ message: error.message || 'Server error updating bus status' });
+    }
+});
+
+ 
+router.put('/profile/update', authMiddleware, async (req, res) => {
+    try {
+
+        const operatorId = req.user.operatorId || req.user.id; 
+        
+        await OperatorService.updateMyProfile(operatorId, req.body);
+        res.status(200).json({ message: 'Profile updated successfully' });
+
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        if (error.message === 'INCORRECT_PASSWORD') {
+            return res.status(401).json({ message: 'Current password is incorrect.' });
+        }
+        res.status(500).json({ message: 'Server error updating profile' });
+    }
+});
 
 module.exports = router;

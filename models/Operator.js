@@ -159,6 +159,37 @@ static getDashboardStats(operatorId) {
             });
         });
     }
+    static findById(id) {
+        return new Promise((resolve, reject) => {
+            const query = 'SELECT * FROM `Operator` WHERE operator_id = ?';
+            db.query(query, [id], (err, results) => {
+                if (err) return reject(err);
+                resolve(results[0]);
+            });
+        });
+    }
+
+    // Update Profile & Password
+    static updateProfile(id, data) {
+        return new Promise((resolve, reject) => {
+            let query = 'UPDATE `Operator` SET fname = ?, lname = ?, email = ?, phone = ?';
+            let params = [data.fname, data.lname, data.email, data.phone];
+
+            // adding new password hash to server
+            if (data.password_hash) {
+                query += ', password_hash = ?';
+                params.push(data.password_hash);
+            }
+
+            query += ' WHERE operator_id = ?';
+            params.push(id);
+
+            db.query(query, params, (err, results) => {
+                if (err) return reject(err);
+                resolve(results.affectedRows > 0);
+            });
+        });
+    }
 
 }
 

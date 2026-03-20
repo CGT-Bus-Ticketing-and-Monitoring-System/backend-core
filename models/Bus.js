@@ -43,11 +43,11 @@ class Bus {
         });
     }
 
-    static async getActiveStatusBuses() {
+static getActiveStatusBuses() {
         return new Promise((resolve, reject) => {
-            const query = 'SELECT bus_id, bus_name, registration_number FROM Bus WHERE status = "ACTIVE"';
+            const query = "SELECT bus_id, bus_name, registration_number, route_id, status FROM `Bus` WHERE status = 'ACTIVE'";
             db.query(query, (err, results) => {
-                if (err) reject(err);
+                if (err) return reject(err);
                 resolve(results);
             });
         });
@@ -150,6 +150,17 @@ class Bus {
             });
         });
     }
+
+static async updateBusStatus(busId, newStatus) {
+    return new Promise((resolve, reject) => {
+        const query = 'UPDATE `Bus` SET status = ? WHERE bus_id = ?';
+        db.query(query, [newStatus, busId], (err, results) => {
+            if (err) return reject(err);
+            resolve(results.affectedRows > 0); 
+        });
+    });
+}
+
 }
 
 module.exports = Bus;

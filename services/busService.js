@@ -24,8 +24,25 @@ async function getActiveStatusBuses() {
     }
 }
 
+
+async function changeBusStatus(busId, status) {
+    try {
+      
+        const success = await Bus.updateBusStatus(busId, status);
+        if (!success) {
+            throw new Error('Bus not found or status already set.');
+        }
+        return success;
+    } catch (error) {
+        console.error('Error in changeBusStatus service:', error);
+        throw error;
+    }
+}
+
+
 module.exports = {
     getActiveMapBuses,
     getLiveBusStatus,
-    getActiveStatusBuses
+    getActiveStatusBuses,
+    changeBusStatus 
 };
