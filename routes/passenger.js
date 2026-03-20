@@ -90,4 +90,17 @@ router.get('/busRoutes', async (req, res) => {
     }
 });
 
+router.get('/analytics', authMiddleware, async (req, res) => {
+    try {
+        const passengerId = req.user.id;
+
+        const dashboardData = await passengerService.getAnalyticsDashboard(passengerId);
+
+        res.status(200).json(dashboardData);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Server Error loading analytics" })
+    }    
+});
+
 module.exports = router;
