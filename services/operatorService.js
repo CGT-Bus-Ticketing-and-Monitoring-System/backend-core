@@ -157,7 +157,6 @@ class OperatorService {
         };
     }
 
-    
     static async getAllOperators() {
         try {
             return await Operator.findAll();
@@ -167,10 +166,8 @@ class OperatorService {
         }
     }
 
-    
     static async createOperator(data) {
         try {
-            
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(data.password, salt);
             
@@ -181,32 +178,54 @@ class OperatorService {
 
             return await Operator.create(operatorData);
         } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                const sqlMsg = error.sqlMessage || '';
+                if (sqlMsg.includes('username')) throw new Error('This username is already taken. Please choose another.');
+                if (sqlMsg.includes('email')) throw new Error('An account with this email already exists.');
+                if (sqlMsg.includes('phone')) throw new Error('This phone number is already registered.');
+                throw new Error('This operator already exists in the system.');
+            }
             console.error('Error in createOperator:', error);
             throw error;
         }
     }
 
-    
     static async updateOperator(id, data) {
         try {
-            
             if (data.password) {
                 const salt = await bcrypt.genSalt(10);
                 data.password_hash = await bcrypt.hash(data.password, salt);
             }
             return await Operator.update(id, data);
         } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                const sqlMsg = error.sqlMessage || '';
+                if (sqlMsg.includes('username')) throw new Error('This username is already taken.');
+                if (sqlMsg.includes('email')) throw new Error('This email is already in use.');
+                if (sqlMsg.includes('phone')) throw new Error('This phone number is already in use.');
+                throw new Error('Data conflicts with an existing operator.');
+            }
             console.error('Error in updateOperator:', error);
             throw error;
         }
     }
 
-    
-    static async deactivateOperator(id) {
+    static async updateOperatorStatus(id, status) {
         try {
-            return await Operator.deactivate(id);
+            return await Operator.updateStatus(id, status);
         } catch (error) {
-            console.error('Error in deactivateOperator:', error);
+            console.error('Error in updateOperatorStatus:', error);
+            throw error;
+        }
+    }
+
+    static async deleteOperator(id) {
+        try {
+            const success = await Operator.delete(id);
+            if (!success) throw new Error('Operator not found');
+            return success;
+        } catch (error) {
+            console.error('Error in deleteOperator:', error);
             throw error;
         }
     }
@@ -240,6 +259,7 @@ class OperatorService {
             throw error;
         }
     }
+
     static async deleteBus(busId) {
         try {
             return await Operator.deleteBus(busId); 
@@ -266,7 +286,6 @@ class OperatorService {
         }
     }
 
-    //Dashboard-Operator
     static async getDashboardData(operatorId) {
         try {
             return await Operator.getDashboardStats(operatorId);
@@ -275,6 +294,7 @@ class OperatorService {
             throw error;
         }
     }
+
     static async updateMyProfile(operatorId, data) {
         const operator = await Operator.findById(operatorId);
         if (!operator) throw new Error('Operator not found');
@@ -286,20 +306,27 @@ class OperatorService {
             phone: data.phone
         };
 
-
         if (data.currPassword && data.newPassword) {
             const isMatch = await bcrypt.compare(data.currPassword, operator.password_hash);
             if (!isMatch) {
                 throw new Error('INCORRECT_PASSWORD');
             }
-            // Hash the new password
             const salt = await bcrypt.genSalt(10);
             updateData.password_hash = await bcrypt.hash(data.newPassword, salt);
         }
 
-        return await Operator.updateProfile(operatorId, updateData);
+        try {
+            return await Operator.updateProfile(operatorId, updateData);
+        } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                const sqlMsg = error.sqlMessage || '';
+                if (sqlMsg.includes('email')) throw new Error('This email is already linked to another account.');
+                if (sqlMsg.includes('phone')) throw new Error('This phone number is already registered.');
+                throw new Error('Data conflicts with an existing operator.');
+            }
+            throw error;
+        }
     }
-
 }
 
 module.exports = OperatorService;
