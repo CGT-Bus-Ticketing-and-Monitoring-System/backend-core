@@ -9,7 +9,7 @@ class Report {
                 COALESCE(SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END), 0) as completed_trips,
                 COALESCE(SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END), 0) as cancelled_trips
             FROM Trip 
-            WHERE start_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
+            WHERE start_time >= DATE_SUB(CURDATE(), INTERVAL (? - 1) DAY)
         `;
         const [rows] = await db.promise().execute(query, [days]);
         return rows[0];
@@ -20,7 +20,7 @@ class Report {
         const query = `
             SELECT COUNT(*) as new_passengers 
             FROM Passenger 
-            WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL (? - 1) DAY)
         `;
         const [rows] = await db.promise().execute(query, [days]);
         return rows[0].new_passengers;
@@ -34,7 +34,7 @@ class Report {
                 COUNT(*) as passenger_count
             FROM Trip
             WHERE status = 'COMPLETED'
-              AND start_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
+              AND start_time >= DATE_SUB(CURDATE(), INTERVAL (? - 1) DAY)
               AND HOUR(start_time) BETWEEN 5 AND 22
             GROUP BY HOUR(start_time)
             ORDER BY hour_of_day ASC
