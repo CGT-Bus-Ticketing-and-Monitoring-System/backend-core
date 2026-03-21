@@ -156,7 +156,7 @@ class OperatorService {
                 : 'No time column found in Transaction or Trip table. Date filtering and earnings-by-date breakdown are unavailable.'
         };
     }
-    
+
     static async getAllOperators() {
         try {
             return await Operator.findAll();
@@ -164,7 +164,7 @@ class OperatorService {
             throw error;
         }
     }
-    
+
     static async createOperator(data) {
         try {
             const salt = await bcrypt.genSalt(10);
@@ -177,10 +177,18 @@ class OperatorService {
 
             return await Operator.create(operatorData);
         } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                const sqlMsg = error.sqlMessage || '';
+                if (sqlMsg.includes('username')) throw new Error('This username is already taken. Please choose another.');
+                if (sqlMsg.includes('email')) throw new Error('An account with this email already exists.');
+                if (sqlMsg.includes('phone')) throw new Error('This phone number is already registered.');
+                throw new Error('This operator already exists in the system.');
+            }
+            console.error('Error in createOperator:', error);
             throw error;
         }
     }
-    
+
     static async updateOperator(id, data) {
         try {
             if (data.password) {
@@ -189,14 +197,42 @@ class OperatorService {
             }
             return await Operator.update(id, data);
         } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                const sqlMsg = error.sqlMessage || '';
+                if (sqlMsg.includes('username')) throw new Error('This username is already taken.');
+                if (sqlMsg.includes('email')) throw new Error('This email is already in use.');
+                if (sqlMsg.includes('phone')) throw new Error('This phone number is already in use.');
+                throw new Error('Data conflicts with an existing operator.');
+            }
+            console.error('Error in updateOperator:', error);
             throw error;
         }
     }
-    
+
     static async deactivateOperator(id) {
         try {
             return await Operator.deactivate(id);
         } catch (error) {
+            throw error;
+        }
+    }
+
+    static async updateOperatorStatus(id, status) {
+        try {
+            return await Operator.updateStatus(id, status);
+        } catch (error) {
+            console.error('Error in updateOperatorStatus:', error);
+            throw error;
+        }
+    }
+
+    static async deleteOperator(id) {
+        try {
+            const success = await Operator.delete(id);
+            if (!success) throw new Error('Operator not found');
+            return success;
+        } catch (error) {
+            console.error('Error in deleteOperator:', error);
             throw error;
         }
     }
@@ -255,8 +291,7 @@ class OperatorService {
         }
     }
 
-      //Dashboard-Operator
-       static async getDashboardData(operatorId, period) {
+    static async getDashboardData(operatorId, period) {
         try {
             return await Operator.getDashboardStats(operatorId, period);
         } catch (error) {
@@ -280,12 +315,21 @@ class OperatorService {
             if (!isMatch) {
                 throw new Error('INCORRECT_PASSWORD');
             }
-             // Hash the new password
             const salt = await bcrypt.genSalt(10);
             updateData.password_hash = await bcrypt.hash(data.newPassword, salt);
         }
 
-        return await Operator.updateProfile(operatorId, updateData);
+        try {
+            return await Operator.updateProfile(operatorId, updateData);
+        } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                const sqlMsg = error.sqlMessage || '';
+                if (sqlMsg.includes('email')) throw new Error('This email is already linked to another account.');
+                if (sqlMsg.includes('phone')) throw new Error('This phone number is already registered.');
+                throw new Error('Data conflicts with an existing operator.');
+            }
+            throw error;
+        }
     }
 }
 

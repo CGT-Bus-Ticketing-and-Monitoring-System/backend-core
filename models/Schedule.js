@@ -1,7 +1,6 @@
 const db = require('../config/db');
 
 class Schedule {
-    // Get all schedules for a specific route
     static findByRoute(routeId) {
         return new Promise((resolve, reject) => {
             const query = `
@@ -47,6 +46,17 @@ class Schedule {
             });
         });
     }
+
+    static updateStatus(id, status) {
+        return new Promise((resolve, reject) => {
+            const query = `UPDATE BusSchedule SET status = ? WHERE schedule_id = ?`;
+
+            db.query(query, [status, id], (err, results) => {
+                if (err) return reject(err);
+                resolve(true); 
+            });
+        });
+    }   
 
     static delete(id) {
         return new Promise((resolve, reject) => {

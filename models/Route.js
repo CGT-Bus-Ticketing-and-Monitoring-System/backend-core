@@ -94,6 +94,17 @@ static create(data) {
         });
     }
 
+    static delete(id) {
+        return new Promise((resolve, reject) => {
+            const query = `DELETE FROM Route WHERE route_id = ?`;
+
+            db.query(query, [id], (err, results) => {
+                if (err) return reject(err);
+                resolve(results.affectedRows > 0);
+            });
+        });
+    }
+
     static assignBus(routeId,busRegNo) {
         return new Promise((resolve, reject) => {
             const query = `UPDATE Bus SET route_id = ? WHERE registration_number = ?`;

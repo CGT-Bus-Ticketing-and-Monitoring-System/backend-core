@@ -32,6 +32,12 @@ async function activateRoute(id) {
     return await Route.activate(id);
 }
 
+async function deleteRoute(id) {
+    const success = await Route.delete(id);
+    if (!success) throw new Error('Route not found');
+    return success;
+}
+
 async function assignBusToRoute(routeId, busRegNo) {
     return await Route.assignBus(routeId, busRegNo);
 }
@@ -45,5 +51,6 @@ module.exports = {
     updateRoute,
     deactivateRoute,
     activateRoute,
-    assignBusToRoute
+    assignBusToRoute,
+    deleteRoute 
 };

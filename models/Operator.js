@@ -39,7 +39,6 @@ class Operator {
                 SELECT o.operator_id, o.fname, o.lname, o.username, o.email, o.phone, o.status,
                 (SELECT COUNT(*) FROM Bus b WHERE b.operator_id = o.operator_id AND b.status = 'ACTIVE') AS no_of_buses
                 FROM Operator o
-                WHERE o.status = 'ACTIVE'
                 ORDER BY o.operator_id DESC
             `;
 
@@ -85,9 +84,19 @@ class Operator {
         });
     }
 
-    static deactivate(id) {
+    static updateStatus(id, status) {
         return new Promise((resolve, reject) => {
-            const query = `UPDATE Operator SET status = 'INACTIVE' WHERE operator_id = ?`;
+            const query = `UPDATE Operator SET status = ? WHERE operator_id = ?`;
+            db.query(query, [status, id], (err, results) => {
+                if (err) return reject(err);
+                resolve(true); 
+            });
+        });
+    }
+
+    static delete(id) {
+        return new Promise((resolve, reject) => {
+            const query = `DELETE FROM Operator WHERE operator_id = ?`;
             db.query(query, [id], (err, results) => {
                 if (err) return reject(err);
                 resolve(results.affectedRows > 0);
@@ -102,7 +111,7 @@ class Operator {
                 b.*,
                 r.route_code AS route 
             FROM Bus b
-            JOIN Route r ON b.route_id = r.route_id 
+            LEFT JOIN Route r ON b.route_id = r.route_id 
             WHERE operator_id = ?`;
             
             db.query(query, [operatorId], (err, results) => {
