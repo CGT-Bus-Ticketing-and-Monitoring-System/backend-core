@@ -104,7 +104,7 @@ class Operator {
                 b.*,
                 r.route_code AS route 
             FROM Bus b
-            JOIN Route r ON b.route_id = r.route_id 
+            LEFT JOIN Route r ON b.route_id = r.route_id 
             WHERE operator_id = ?`;
             
             db.query(query, [operatorId], (err, results) => {
