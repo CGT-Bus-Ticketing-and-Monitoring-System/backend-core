@@ -473,6 +473,27 @@ router.put('/schedules/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// Update Schedule Status (Activate / Deactivate)
+router.put('/schedules/status/:id', async (req, res) => {
+    const { status } = req.body;
+    
+    if (!status || !['ACTIVE', 'INACTIVE'].includes(status)) {
+        return res.status(400).json({ message: 'Valid status is required' });
+    }
+
+    try {
+        const success = await ScheduleService.updateScheduleStatus(req.params.id, status);
+        if (success) {
+            res.json({ message: `Schedule marked as ${status}` });
+        } else {
+            res.status(404).json({ message: 'Schedule not found' });
+        }
+    } catch (error) {
+        console.error('Error updating schedule status:', error);
+        res.status(500).json({ message: 'Database Error. Please try again later.' });
+    }
+});
+
 // Delete a schedule
 router.delete('/schedules/:id', authMiddleware, async (req, res) => {
     try {
