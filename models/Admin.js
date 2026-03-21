@@ -35,9 +35,7 @@ class Admin {
         });
     }
 
-    // Passenger Management
-    
-
+    // Passenger Management 
     static findAllPassengers() {
         return new Promise((resolve, reject) => {
             const query = `
@@ -96,6 +94,7 @@ class Admin {
             });
         });
     }
+
     static getAvailableCards() {
         return new Promise((resolve, reject) => {           
             const query = `
@@ -110,32 +109,33 @@ class Admin {
             });
         });
     }
-   static async replacePassengerCard(passengerId, newCardId) {
-    try {
-        //card ID linked to this passenger
-        const [current] = await new Promise((res, rej) => {
-            db.query('SELECT card_id FROM Passenger WHERE passenger_id = ?', [passengerId], (e, r) => e ? rej(e) : res(r));
-        });
-        //old card as BLOCKED 
-        if (current && current.card_id) {
-            await new Promise((res, rej) => {
-                db.query("UPDATE Card SET status = 'INACTIVE' WHERE card_id = ?", [current.card_id], (e, r) => e ? rej(e) : res(r));
+
+    static async replacePassengerCard(passengerId, newCardId) {
+        try {
+            //card ID linked to this passenger
+            const [current] = await new Promise((res, rej) => {
+                db.query('SELECT card_id FROM Passenger WHERE passenger_id = ?', [passengerId], (e, r) => e ? rej(e) : res(r));
             });
+            //old card as BLOCKED 
+            if (current && current.card_id) {
+                await new Promise((res, rej) => {
+                    db.query("UPDATE Card SET status = 'INACTIVE' WHERE card_id = ?", [current.card_id], (e, r) => e ? rej(e) : res(r));
+                });
+            }
+            //new card as ACTIVE
+            await new Promise((res, rej) => {
+                db.query("UPDATE Card SET status = 'ACTIVE' WHERE card_id = ?", [newCardId], (e, r) => e ? rej(e) : res(r));
+            });
+            //Passenger record to link the new card_id
+            await new Promise((res, rej) => {
+                db.query("UPDATE Passenger SET card_id = ? WHERE passenger_id = ?", [newCardId, passengerId], (e, r) => e ? rej(e) : res(r));
+            });
+            return true;
+        } catch (error) {
+            console.error("Database error during card replacement:", error);
+            throw error;
         }
-        //new card as ACTIVE
-        await new Promise((res, rej) => {
-            db.query("UPDATE Card SET status = 'ACTIVE' WHERE card_id = ?", [newCardId], (e, r) => e ? rej(e) : res(r));
-        });
-        //Passenger record to link the new card_id
-        await new Promise((res, rej) => {
-            db.query("UPDATE Passenger SET card_id = ? WHERE passenger_id = ?", [newCardId, passengerId], (e, r) => e ? rej(e) : res(r));
-        });
-        return true;
-    } catch (error) {
-        console.error("Database error during card replacement:", error);
-        throw error;
     }
-}
 //Deactivate Passenger
     static deactivatePassenger(id) {
         return new Promise((resolve, reject) => {

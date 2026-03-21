@@ -17,7 +17,6 @@ class Route {
                 SELECT r.*, 
                 (SELECT COUNT(*) FROM Bus b WHERE b.route_id = r.route_id AND b.status = 'ACTIVE') AS assigned_buses
                 FROM Route r
-                WHERE r.status = 'ACTIVE'
                 ORDER BY r.route_id DESC
             `;
 
@@ -28,18 +27,30 @@ class Route {
         });
     }
 
-    static create(data) {
+static create(data) {
         return new Promise((resolve, reject) => {
-            const query = `
-                INSERT INTO Route (route_code, start_location, end_location, base_fare)
-                VALUES (?, ?, ?, ?)
-            `;
+            const checkQuery = `SELECT COUNT(*) as count FROM Route WHERE route_code = ?`;
+            
+            db.query(checkQuery, [data.route_code], (checkErr, checkResults) => {
+                if (checkErr) return reject(checkErr);
 
-            const params = [data.route_code, data.start_location, data.end_location, data.base_fare];
+                if (checkResults[0].count > 0) {
+                    const error = new Error('Route code already exists');
+                    error.isDuplicate = true; 
+                    return reject(error);
+                }
 
-            db.query(query, params, (err, results) => {
-                if (err) return reject(err);
-                resolve(results.insertId)
+                const insertQuery = `
+                    INSERT INTO Route (route_code, start_location, end_location, base_fare)
+                    VALUES (?, ?, ?, ?)
+                `;
+
+                const params = [data.route_code, data.start_location, data.end_location, data.base_fare];
+
+                db.query(insertQuery, params, (err, results) => {
+                    if (err) return reject(err);
+                    resolve(results.insertId);
+                });
             });
         });
     }
@@ -68,6 +79,17 @@ class Route {
             db.query(query, [id], (err, results) => {
                 if (err) return reject(err);
                 resolve(results.affectedRows > 0);
+            });
+        });
+    }
+
+    static activate(id) {
+        return new Promise((resolve, reject) => {
+            const query = `UPDATE Route SET status = 'ACTIVE' WHERE route_id = ?`;
+
+            db.query(query, [id], (err, results) => {
+                if (err) return reject(err);
+                resolve(true); 
             });
         });
     }
