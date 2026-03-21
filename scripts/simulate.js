@@ -1,11 +1,9 @@
 const db = require("../config/db");
 
-console.log("🚌 Smart Bus Route Simulator Starting...");
+console.log("Smart Bus Route Simulator Starting...");
 
-/*
------------------------------------
-BUS ROUTES (WAYPOINTS)
------------------------------------
+/*BUS ROUTES (WAYPOINTS)
+
 Each bus moves through these points
 then loops back to the start
 */
@@ -36,10 +34,8 @@ const routes = {
   ]
 };
 
-/*
------------------------------------
-TRACK CURRENT TARGET POINT
------------------------------------
+/*TRACK CURRENT TARGET POINT
+
 Each bus remembers which waypoint
 it is travelling toward
 */
@@ -50,19 +46,11 @@ Object.keys(routes).forEach(busId => {
   routeIndex[busId] = 0;
 });
 
-/*
------------------------------------
-MOVEMENT SETTINGS
------------------------------------
-*/
+/*MOVEMENT SETTINGS*/
 
 const speed = 0.0015; // movement distance per update
 
-/*
------------------------------------
-MAIN SIMULATION LOOP
------------------------------------
-*/
+/*MAIN SIMULATION LOOP*/
 
 const simulateMovement = () => {
 
@@ -81,7 +69,7 @@ const simulateMovement = () => {
   db.query(fetchQuery, (err, buses) => {
 
     if (err) {
-      console.error("❌ DB error:", err);
+      console.error("DB error:", err);
       return;
     }
 
@@ -101,11 +89,7 @@ const simulateMovement = () => {
 
       const distance = Math.sqrt(dLat*dLat + dLng*dLng);
 
-      /*
-      -----------------------------------
-      IF BUS REACHED THE WAYPOINT
-      -----------------------------------
-      */
+      /*IF BUS REACHED THE WAYPOINT*/
 
       if (distance < 0.0002) {
 
@@ -113,17 +97,13 @@ const simulateMovement = () => {
           (targetIndex + 1) % path.length;
 
         console.log(
-          `🔁 Bus ${bus.bus_id} heading to next stop`
+          `Bus ${bus.bus_id} heading to next stop`
         );
 
         return;
       }
 
-      /*
-      -----------------------------------
-      MOVE BUS TOWARD TARGET
-      -----------------------------------
-      */
+      /*MOVE BUS TOWARD TARGET*/
 
       const newLat =
         lat + (dLat / distance) * speed;
@@ -137,7 +117,7 @@ const simulateMovement = () => {
       db.query(insertQuery, [bus.bus_id, newLat, newLng]);
 
       console.log(
-        `🚌 Bus ${bus.bus_id} -> ${newLat.toFixed(5)}, ${newLng.toFixed(5)}`
+        `Bus ${bus.bus_id} -> ${newLat.toFixed(5)}, ${newLng.toFixed(5)}`
       );
 
     });
@@ -146,11 +126,7 @@ const simulateMovement = () => {
 
 };
 
-/*
------------------------------------
-RUN EVERY 2 SECONDS
------------------------------------
-*/
+/*RUN EVERY 2 SECONDS*/
 
 const interval = setInterval(simulateMovement, 2000);
 
@@ -158,7 +134,7 @@ process.on("SIGINT", () => {
 
   clearInterval(interval);
 
-  console.log("\n🛑 Simulation Stopped");
+  console.log("\n Simulation Stopped");
 
   db.end(() => process.exit());
 
