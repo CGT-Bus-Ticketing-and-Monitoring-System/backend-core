@@ -27,7 +27,10 @@ app.use('/api/operator',operatorRoutes);
 app.use('/api/iotSystem', iotSystemRoutes);
 app.use('/api/test', testRoutes);
 
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+        console.log(`Server Running on Port ${PORT}`);
+    });
+}
 
-app.listen(PORT, () => {
-    console.log(`Server Running on Port ${PORT}`);
-});
+module.exports = app;

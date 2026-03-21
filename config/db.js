@@ -13,15 +13,17 @@ const db = mysql.createPool({
     waitForConnections: true,
 });
 
-db.getConnection((err, connection) => {
-    if (err) {
-        console.error('Error Connecting to the Database', err.message);
-        return;
-    }
-    else {
-        console.log('Connected to MySQL Database');
-        connection.release();
-    }
-});
+if (process.env.NODE_ENV !== 'test') {
+    db.getConnection((err, connection) => {
+        if (err) {
+            console.error('Error Connecting to the Database', err.message);
+            return;
+        }
+        else {
+            console.log('Connected to MySQL Database');
+            connection.release();
+        }
+    });   
+}
 
 module.exports = db;
