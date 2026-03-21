@@ -99,7 +99,13 @@ class Operator {
     static findBusesByOperator(operatorId) {
         return new Promise((resolve, reject) => {
             
-           const query = `SELECT * FROM Bus WHERE operator_id = ?`;
+           const query = `
+            SELECT 
+                b.*,
+                r.route_code AS route 
+            FROM Bus b
+            JOIN Route r ON b.route_id = r.route_id 
+            WHERE operator_id = ?`;
             
             db.query(query, [operatorId], (err, results) => {
                 if (err) return reject(err);
