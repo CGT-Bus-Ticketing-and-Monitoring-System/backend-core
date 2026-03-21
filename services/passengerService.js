@@ -67,42 +67,76 @@ async function getProfile(passengerId) {
     }
 }
 
-// New Admin functions
-
 async function getAllPassengers() {
-    return await Admin.findAllPassengers(); 
+    return await Passenger.findAllPassengers(); 
 }
+
 async function createPassengerAdmin(data) {
-    const password_hash = await bcrypt.hash(data.password, 10);
-    return await Admin.createPassenger({
-        first_name: data.first_name,
-        last_name: data.last_name,
-        username: data.username,
-        email: data.email,
-        phone: data.phone,
-        balance: data.balance || 0.00,
-        card_id: data.card_id || null,
-        password_hash: password_hash
-    });
-}
-async function updatePassengerAdmin(id, data) {
-    let password_hash = null;
-    if (data.password && data.password.trim() !== '') {
-        password_hash = await bcrypt.hash(data.password, 10);
+    try {
+        const password_hash = await bcrypt.hash(data.password, 10);
+        return await Passenger.createPassenger({
+            first_name: data.first_name,
+            last_name: data.last_name,
+            username: data.username,
+            email: data.email,
+            phone: data.phone,
+            balance: data.balance || 0.00,
+            card_id: data.card_id || null,
+            password_hash: password_hash
+        });
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            const sqlMsg = error.sqlMessage || '';
+            if (sqlMsg.includes('username')) throw new Error('This username is already taken.');
+            if (sqlMsg.includes('email')) throw new Error('A passenger with this email already exists.');
+            if (sqlMsg.includes('phone')) throw new Error('This phone number is already registered.');
+            throw new Error('This passenger already exists in the system.');
+        }
+        throw error;
     }
-    return await Admin.updatePassenger(id, {
-        first_name: data.first_name,
-        last_name: data.last_name,
-        username: data.username,
-        email: data.email,
-        phone: data.phone,
-        balance: data.balance,
-        password_hash: password_hash
-    });
 }
-async function deactivatePassengerAdmin(id) {
-    return await Admin.deactivatePassenger(id);
+
+async function updatePassengerAdmin(id, data) {
+    try {
+        let password_hash = null;
+        if (data.password && data.password.trim() !== '') {
+            password_hash = await bcrypt.hash(data.password, 10);
+        }
+
+        const success = await Passenger.updatePassengerDetails(id, {
+            first_name: data.first_name,
+            last_name: data.last_name,
+            username: data.username,
+            email: data.email,
+            phone: data.phone,
+            balance: data.balance,
+            password_hash: password_hash
+        });
+        
+        if (!success) throw new Error('Passenger not found');
+        return success;
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            const sqlMsg = error.sqlMessage || '';
+            if (sqlMsg.includes('username')) throw new Error('This username is already taken.');
+            if (sqlMsg.includes('email')) throw new Error('This email is already in use.');
+            if (sqlMsg.includes('phone')) throw new Error('This phone number is already in use.');
+            throw new Error('Data conflicts with an existing passenger.');
+        }
+        throw error;
+    }
 }
+
+async function updatePassengerStatus(id, status) {
+    return await Passenger.updateStatus(id, status);
+}
+
+async function deletePassenger(id) {
+    const success = await Passenger.delete(id);
+    if (!success) throw new Error('Passenger not found');
+    return success;
+}
+
 async function getAvailableCards() {
     return await Admin.getAvailableCards();
 }
@@ -179,7 +213,8 @@ module.exports = {
     getAllPassengers,
     createPassengerAdmin,
     updatePassengerAdmin,
-    deactivatePassengerAdmin,
+    updatePassengerStatus, 
+    deletePassenger,
     getAvailableCards,
     replaceCard
 };

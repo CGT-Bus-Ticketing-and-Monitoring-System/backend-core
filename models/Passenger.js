@@ -150,6 +150,85 @@ class Passenger {
             });
         });
     }
+
+    // Passenger Management 
+    static findAllPassengers() {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT p.passenger_id, p.first_name, p.last_name, p.username, 
+                       p.email, p.phone, p.balance, p.status AS acc_status, 
+                       c.card_id, c.rfid_uid AS card_number, c.status AS card_status
+                FROM Passenger p
+                LEFT JOIN Card c ON p.card_id = c.card_id
+                ORDER BY p.passenger_id DESC
+            `;
+            db.query(query, (err, results) => {
+                if (err) return reject(err);
+                resolve(results);
+            });
+        });
+    }
+
+    static createPassenger(data) {
+        return new Promise((resolve, reject) => {
+            const query = `
+                INSERT INTO Passenger 
+                (first_name, last_name, username, email, phone, password_hash, balance, card_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+            const cardId = data.card_id ? data.card_id : null; 
+            const params = [
+                data.first_name, data.last_name, data.username, data.email, 
+                data.phone, data.password_hash, data.balance, cardId
+            ];
+            db.query(query, params, (err, results) => {
+                if (err) return reject(err);
+                resolve(results.insertId);
+            });
+        });
+    }
+
+    static updatePassengerDetails(id, data) {
+        return new Promise((resolve, reject) => {
+            let query = `
+                UPDATE Passenger 
+                SET first_name = ?, last_name = ?, username = ?, email = ?, phone = ?, balance = ?
+            `;
+            let params = [
+                data.first_name, data.last_name, data.username, data.email, data.phone, data.balance
+            ];
+            if (data.password_hash) {
+                query += `, password_hash = ?`;
+                params.push(data.password_hash);
+            }
+            query += ` WHERE passenger_id = ?`;
+            params.push(id);
+            db.query(query, params, (err, results) => {
+                if (err) return reject(err);
+                resolve(results.affectedRows > 0);
+            });
+        });
+    }
+
+    static updateStatus(id, status) {
+        return new Promise((resolve, reject) => {
+            const query = "UPDATE `Passenger` SET status = ? WHERE passenger_id = ?";
+            db.query(query, [status, id], (err, results) => {
+                if (err) return reject(err);
+                resolve(true); 
+            });
+        });
+    }
+
+    static delete(id) {
+        return new Promise((resolve, reject) => {
+            const query = "DELETE FROM `Passenger` WHERE passenger_id = ?";
+            db.query(query, [id], (err, results) => {
+                if (err) return reject(err);
+                resolve(results.affectedRows > 0);
+            });
+        });
+    }
 }
 
 module.exports = Passenger;

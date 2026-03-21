@@ -134,6 +134,26 @@ router.put('/routes/activate/:id', async (req, res) => {
     }
 });
 
+// Permanent delete route
+router.delete('/routes/:id', async (req, res) => {
+    try {
+        const success = await routeService.deleteRoute(req.params.id);
+        if (success) {
+            res.json({ message: 'Route permanently deleted' });
+        } else {
+            res.status(404).json({ message: 'Route not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting route:', error);
+
+        if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+            return res.status(409).json({ message: 'Cannot delete this route because buses are currently assigned to it.' });
+        }
+        
+        res.status(500).json({ error: 'Database Error' });
+    }
+});
+
 // Load data for the dropdowns
 router.get('/routes/assignment-data', async (req, res) => {
     try {
@@ -184,44 +204,75 @@ router.post('/operators/create', authMiddleware, async (req, res) => {
     if (!fname || !lname || !username || !email || !phone || !password) {
         return res.status(400).json({ message: 'All fields are required' });
     }
+    
     try {
         const newId = await OperatorService.createOperator({ 
             fname, lname, username, email, phone, password 
         });
         res.status(201).json({ message: 'Operator created', operator_id: newId });
+        
     } catch (error) {
-        console.error('Error creating operator:', error);
-        res.status(500).json({ error: 'Database Error (Username/Email might already exist)' });
+        console.error('Create Operator Error:', error.message);
+        
+        if (error.message.includes('already') || error.message.includes('conflicts')) {
+            return res.status(409).json({ message: error.message });
+        }
+        res.status(500).json({ message: 'Server error creating operator' });
     }
 });
 
 // Update an operator
 router.put('/operators/update/:id', authMiddleware, async (req, res) => {
     try {
-        const success = await OperatorService.updateOperator(req.params.id, req.body);
-        if (success) {
-            res.json({ message: 'Operator updated successfully' });
-        } else {
-            res.status(404).json({ message: 'Operator not found' });
-        }
+        await OperatorService.updateOperator(req.params.id, req.body);
+        res.status(200).json({ message: 'Operator updated successfully' });
+        
     } catch (error) {
-        console.error('Error updating operator:', error);
-        res.status(500).json({ error: 'Server Error' });
+        console.error('Update Operator Error:', error.message);
+        
+        if (error.message.includes('already') || error.message.includes('conflicts')) {
+            return res.status(409).json({ message: error.message });
+        }
+        if (error.message === 'Operator not found') {
+            return res.status(404).json({ message: error.message });
+        }
+        res.status(500).json({ message: 'Server error updating operator' });
     }
 });
 
-// Deactivate an operator
-router.put('/operators/deactivate/:id', authMiddleware, async (req, res) => {
+// Update Operator Status
+router.put('/operators/status/:id', authMiddleware, async (req, res) => {
+    const { status } = req.body;
+    
+    if (!status || !['ACTIVE', 'INACTIVE'].includes(status)) {
+        return res.status(400).json({ message: 'Valid status is required' });
+    }
+
     try {
-        const success = await OperatorService.deactivateOperator(req.params.id);
+        const success = await OperatorService.updateOperatorStatus(req.params.id, status);
         if (success) {
-            res.json({ message: 'Operator deactivated' });
+            res.json({ message: `Operator marked as ${status}` });
         } else {
             res.status(404).json({ message: 'Operator not found' });
         }
     } catch (error) {
-        console.error('Error deactivating operator:', error);
-        res.status(500).json({ error: 'Server Error' });
+        console.error('Error updating operator status:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// Permanently Delete Operator
+router.delete('/operators/:id', authMiddleware, async (req, res) => {
+    try {
+        const success = await OperatorService.deleteOperator(req.params.id);
+        if (success) {
+            res.json({ message: 'Operator permanently deleted' });
+        } else {
+            res.status(404).json({ message: 'Operator not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting operator:', error);
+        res.status(500).json({ message: 'Server Error' });
     }
 });
 
@@ -241,36 +292,45 @@ router.post('/passengers/create', authMiddleware, async (req, res) => {
         const newId = await PassengerService.createPassengerAdmin(req.body);
         res.status(201).json({ message: 'Passenger created successfully', passenger_id: newId });
     } catch (error) {
+        if (error.message.includes('already') || error.message.includes('conflicts')) {
+            return res.status(409).json({ message: error.message });
+        }
         console.error('Error creating passenger:', error);
-        res.status(500).json({ error: 'Database Error' });
+        res.status(500).json({ message: 'Database Error' });
     }
 });
 
 router.put('/passengers/update/:id', authMiddleware, async (req, res) => {
     try {
-        const success = await PassengerService.updatePassengerAdmin(req.params.id, req.body);
-        if (success) {
-            res.json({ message: 'Passenger updated successfully' });
-        } else {
-            res.status(404).json({ message: 'Passenger not found' });
-        }
+        await PassengerService.updatePassengerAdmin(req.params.id, req.body);
+        res.status(200).json({ message: 'Passenger updated successfully' });
     } catch (error) {
+        if (error.message.includes('already') || error.message.includes('conflicts')) {
+            return res.status(409).json({ message: error.message });
+        }
         console.error('Error updating passenger:', error);
-        res.status(500).json({ error: 'Database Error' });
+        res.status(500).json({ message: 'Database Error' });
     }
 });
 
-router.put('/passengers/deactivate/:id', authMiddleware, async (req, res) => {
+// Update passenger status
+router.put('/passengers/status/:id', authMiddleware, async (req, res) => {
+    const { status } = req.body;
     try {
-        const success = await PassengerService.deactivatePassengerAdmin(req.params.id);
-        if (success) {
-            res.json({ message: 'Passenger deactivated' });
-        } else {
-            res.status(404).json({ message: 'Passenger not found' });
-        }
+        await PassengerService.updatePassengerStatus(req.params.id, status);
+        res.json({ message: `Passenger marked as ${status}` });
     } catch (error) {
-        console.error('Error deactivating passenger:', error);
-        res.status(500).json({ error: 'Database Error' });
+        res.status(500).json({ message: 'Database Error' });
+    }
+});
+
+// Permanently Delete Passenger
+router.delete('/passengers/:id', authMiddleware, async (req, res) => {
+    try {
+        await PassengerService.deletePassenger(req.params.id);
+        res.json({ message: 'Passenger permanently deleted' });
+    } catch (error) {
+        res.status(500).json({ message: 'Database Error' });
     }
 });
 
@@ -371,7 +431,6 @@ router.put('/manage/deactivate/:id', authMiddleware, async (req, res) => {
         res.status(400).json({ message: error.message || 'Server error deactivating admin' });
     }
 });
-
 
 //rfid-cards
 router.get('/cards', authMiddleware, async (req, res) => {
