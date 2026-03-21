@@ -391,6 +391,7 @@ router.get('/manage', authMiddleware, async (req, res) => {
 });
 
 
+// Register Admin
 router.post('/manage/register', authMiddleware, async (req, res) => {
     try {
         const { fname, lname, username, email, phone, password } = req.body;
@@ -402,33 +403,67 @@ router.post('/manage/register', authMiddleware, async (req, res) => {
         res.status(201).json({ message: 'Admin registered successfully', admin_id: newId });
         
     } catch (error) {
-        console.error('Error registering admin:', error);
-        if (error.message === 'Username is already taken') {
+        console.error('Registration Error:', error.message);
+
+        if (error.message.includes('already') || error.message.includes('conflicts')) {
             return res.status(409).json({ message: error.message });
         }
         res.status(500).json({ message: 'Server error registering admin' });
     }
 });
 
-
+// Update Admin
 router.put('/manage/update/:id', authMiddleware, async (req, res) => {
     try {
         await AdminService.updateAdmin(req.params.id, req.body);
         res.status(200).json({ message: 'Admin updated successfully' });
+        
     } catch (error) {
-        console.error('Error updating admin:', error);
-        res.status(400).json({ message: error.message || 'Server error updating admin' });
+        console.error('Update Error:', error.message);
+
+        if (error.message.includes('already') || error.message.includes('conflicts')) {
+            return res.status(409).json({ message: error.message });
+        }
+        if (error.message === 'Admin not found') {
+            return res.status(404).json({ message: error.message });
+        }
+        res.status(500).json({ message: 'Server error updating admin' });
     }
 });
 
+// Update Admin Status
+router.put('/manage/status/:id', async (req, res) => {
+    const { status } = req.body;
 
-router.put('/manage/deactivate/:id', authMiddleware, async (req, res) => {
+    if (!status || !['ACTIVE', 'INACTIVE'].includes(status)) {
+        return res.status(400).json({ message: 'Valid status is required' });
+    }
+
     try {
-        await AdminService.deactivateAdmin(req.params.id);
-        res.status(200).json({ message: 'Admin deactivated successfully' });
+        const success = await AdminService.updateAdminStatus(req.params.id, status);
+        if (success) {
+            res.json({ message: `Admin marked as ${status}` });
+        } else {
+            res.status(404).json({ message: 'Admin not found' });
+        }
     } catch (error) {
-        console.error('Error deactivating admin:', error);
-        res.status(400).json({ message: error.message || 'Server error deactivating admin' });
+        console.error('Error updating admin status:', error);
+        res.status(500).json({ message: 'Database Error. Please try again later.' });
+    }
+});
+
+// Permanently Remove Admin
+router.delete('/manage/:id', async (req, res) => {
+    try {
+        const success = await AdminService.deleteAdmin(req.params.id);
+        if (success) {
+            res.json({ message: 'Admin permanently deleted' });
+        } else {
+            res.status(404).json({ message: 'Admin not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting admin:', error);
+        res.status(500).json({ message: 'Database Error. Please try again later.' });
     }
 });
 
