@@ -156,21 +156,17 @@ class OperatorService {
                 : 'No time column found in Transaction or Trip table. Date filtering and earnings-by-date breakdown are unavailable.'
         };
     }
-
     
     static async getAllOperators() {
         try {
             return await Operator.findAll();
         } catch (error) {
-            console.error('Error in getAllOperators:', error);
             throw error;
         }
     }
-
     
     static async createOperator(data) {
         try {
-            
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(data.password, salt);
             
@@ -181,32 +177,26 @@ class OperatorService {
 
             return await Operator.create(operatorData);
         } catch (error) {
-            console.error('Error in createOperator:', error);
             throw error;
         }
     }
-
     
     static async updateOperator(id, data) {
         try {
-            
             if (data.password) {
                 const salt = await bcrypt.genSalt(10);
                 data.password_hash = await bcrypt.hash(data.password, salt);
             }
             return await Operator.update(id, data);
         } catch (error) {
-            console.error('Error in updateOperator:', error);
             throw error;
         }
     }
-
     
     static async deactivateOperator(id) {
         try {
             return await Operator.deactivate(id);
         } catch (error) {
-            console.error('Error in deactivateOperator:', error);
             throw error;
         }
     }
@@ -240,6 +230,7 @@ class OperatorService {
             throw error;
         }
     }
+
     static async deleteBus(busId) {
         try {
             return await Operator.deleteBus(busId); 
@@ -252,7 +243,6 @@ class OperatorService {
         try {
             return await Operator.findBusesByOperator(operatorId);
         } catch (error) {
-            console.error('Error in getMyBuses:', error);
             throw error;
         }
     }
@@ -261,20 +251,19 @@ class OperatorService {
         try {
             return await Operator.createBus(data);
         } catch (error) {
-            console.error('Error in createBus:', error);
             throw error;
         }
     }
 
-    //Dashboard-Operator
-    static async getDashboardData(operatorId) {
+      //Dashboard-Operator
+       static async getDashboardData(operatorId, period) {
         try {
-            return await Operator.getDashboardStats(operatorId);
+            return await Operator.getDashboardStats(operatorId, period);
         } catch (error) {
-            console.error('Error in getDashboardData Service:', error);
             throw error;
         }
     }
+
     static async updateMyProfile(operatorId, data) {
         const operator = await Operator.findById(operatorId);
         if (!operator) throw new Error('Operator not found');
@@ -286,20 +275,18 @@ class OperatorService {
             phone: data.phone
         };
 
-
         if (data.currPassword && data.newPassword) {
             const isMatch = await bcrypt.compare(data.currPassword, operator.password_hash);
             if (!isMatch) {
                 throw new Error('INCORRECT_PASSWORD');
             }
-            // Hash the new password
+             // Hash the new password
             const salt = await bcrypt.genSalt(10);
             updateData.password_hash = await bcrypt.hash(data.newPassword, salt);
         }
 
         return await Operator.updateProfile(operatorId, updateData);
     }
-
 }
 
 module.exports = OperatorService;
