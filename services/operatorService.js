@@ -161,7 +161,6 @@ class OperatorService {
         try {
             return await Operator.findAll();
         } catch (error) {
-            console.error('Error in getAllOperators:', error);
             throw error;
         }
     }
@@ -206,6 +205,14 @@ class OperatorService {
                 throw new Error('Data conflicts with an existing operator.');
             }
             console.error('Error in updateOperator:', error);
+            throw error;
+        }
+    }
+
+    static async deactivateOperator(id) {
+        try {
+            return await Operator.deactivate(id);
+        } catch (error) {
             throw error;
         }
     }
@@ -272,7 +279,6 @@ class OperatorService {
         try {
             return await Operator.findBusesByOperator(operatorId);
         } catch (error) {
-            console.error('Error in getMyBuses:', error);
             throw error;
         }
     }
@@ -281,16 +287,14 @@ class OperatorService {
         try {
             return await Operator.createBus(data);
         } catch (error) {
-            console.error('Error in createBus:', error);
             throw error;
         }
     }
 
-    static async getDashboardData(operatorId) {
+    static async getDashboardData(operatorId, period) {
         try {
-            return await Operator.getDashboardStats(operatorId);
+            return await Operator.getDashboardStats(operatorId, period);
         } catch (error) {
-            console.error('Error in getDashboardData Service:', error);
             throw error;
         }
     }
