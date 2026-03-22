@@ -283,10 +283,13 @@ class OperatorService {
         }
     }
 
-    static async createBus(data) {
+static async createBus(data) {
         try {
             return await Operator.createBus(data);
         } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                throw new Error('DUPLICATE_REGISTRATION_NUMBER');
+            }
             throw error;
         }
     }
