@@ -62,6 +62,13 @@ router.post('/create-bus', async (req, res) => {
         const result = await OperatorService.createBus(req.body);
         res.status(201).json({ message: "Bus created successfully", id: result.insertId });
     } catch (error) {
+        if (error.message === 'DUPLICATE_REGISTRATION_NUMBER') {
+            return res.status(409).json({ 
+                message: "A bus with this registration number already exists." 
+            });
+        }
+
+        console.error("Error creating bus:", error);
         res.status(500).json({ message: "Error saving bus", error: error.message });
     }
 });
@@ -98,8 +105,8 @@ router.put('/update-bus/:id', authMiddleware, async (req, res) => {
         return res.status(500).json({ error: 'Server error while updating bus' });
     }
 });
-// Dashboard-Operator
 
+// Dashboard-Operator
 router.get('/dashboard-summary/:id', async (req, res) => {
     try {
         const operatorId = req.params.id;
@@ -137,9 +144,16 @@ router.put('/profile/update', authMiddleware, async (req, res) => {
         await OperatorService.updateMyProfile(operatorId, req.body);
         res.status(200).json({ message: 'Profile updated successfully' });
     } catch (error) {
+
         if (error.message === 'INCORRECT_PASSWORD') {
             return res.status(401).json({ message: 'Current password is incorrect.' });
         }
+
+        if (error.message.includes('already linked') || error.message.includes('already registered') || error.message.includes('conflicts')) {
+            return res.status(409).json({ message: error.message });
+        }
+
+        console.error("Profile Update Error:", error);
         res.status(500).json({ message: 'Server error updating profile' });
     }
 });
