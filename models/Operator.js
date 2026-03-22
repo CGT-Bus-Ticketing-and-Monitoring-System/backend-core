@@ -12,7 +12,6 @@ class Operator {
         this.no_of_buses = data.no_of_buses || 0;
     }
 
-    
     static findByUsername(username) {
         return new Promise((resolve, reject) => {
             const query = `SELECT * FROM Operator WHERE username = ?`;
@@ -150,7 +149,6 @@ class Operator {
         });
     }
 
-   
       // Update Profile & Password
       static updateProfile(id, data) {
         return new Promise((resolve, reject) => {
@@ -172,15 +170,20 @@ class Operator {
             });
         });
     }
-//Dashboard-Operator
+
+    // Dashboard-Operator
     static async getDashboardStats(operatorId, timeRange = '30days') {
         return new Promise((resolve, reject) => {
-            let dateCondition = 'DATE(t.start_time) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+            
+
+            let dateCondition = 't.start_time >= (CURDATE() - INTERVAL 29 DAY) AND t.start_time < (CURDATE() + INTERVAL 1 DAY)';
             
             if (timeRange === 'today') {
-                dateCondition = 'DATE(t.start_time) = CURDATE()';
+
+                dateCondition = 't.start_time >= CURDATE() AND t.start_time < (CURDATE() + INTERVAL 1 DAY)';
             } else if (timeRange === '7days') {
-                dateCondition = 'DATE(t.start_time) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
+
+                dateCondition = 't.start_time >= (CURDATE() - INTERVAL 6 DAY) AND t.start_time < (CURDATE() + INTERVAL 1 DAY)';
             }
 
             const busQuery = `
@@ -190,6 +193,7 @@ class Operator {
                     COALESCE(SUM(CASE WHEN status = 'INACTIVE' THEN 1 ELSE 0 END), 0) as inactive_buses
                 FROM \`Bus\` WHERE operator_id = ?
             `;
+
 
             const earningsQuery = `
                 SELECT COALESCE(SUM(tr.fare_amount), 0) as today_earnings 
