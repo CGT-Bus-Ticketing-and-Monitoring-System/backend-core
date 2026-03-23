@@ -103,4 +103,18 @@ router.get('/analytics', authMiddleware, async (req, res) => {
     }    
 });
 
+
+router.get('/busSchedule/:routeid', async (req,res) => {
+    try{
+
+        const routeId = req.params.routeid;
+        const busScheduleData = await routeService.bus_schdule(routeId);
+
+        res.json(busScheduleData);
+
+    }catch (error){
+        res.status(500).json({error: "No return complete data case "});
+    }
+});
+
 module.exports = router;

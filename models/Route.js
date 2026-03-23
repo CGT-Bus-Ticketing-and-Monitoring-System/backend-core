@@ -140,10 +140,28 @@ static create(data) {
     static async getAllBusRoutes(){
         return new Promise((resolve , reject) => {
             const sql_bus = `
-            SELECT route_code , start_location , end_location
+            SELECT route_code , start_location , end_location , base_fare
             FROM Route WHERE status = 'ACTIVE'
             `;
             db.query(sql_bus , (err,results)=> {
+                if(err) return reject(err);
+                resolve(results);
+            });
+        });
+    }
+
+    static async getBusSchedule(routeid){
+        return new Promise((resolve , reject) => {
+            const sql_bus_sch = `
+            SELECT * 
+            FROM BusSchedule
+            WHERE route_id = ? 
+            AND departure_time > ADDTIME(CURRENT_TIME, '05:30:00') 
+            AND status = 'ACTIVE'
+            ORDER BY departure_time ASC;
+            `;
+
+            db.query(sql_bus_sch , [routeid], (err,results) => {
                 if(err) return reject(err);
                 resolve(results);
             });
