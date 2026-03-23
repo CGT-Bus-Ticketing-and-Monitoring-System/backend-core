@@ -62,6 +62,7 @@ async function getProfile(passengerId) {
         last_name: user.last_name,
         balance: user.balance,
         card_uid: user.card_uid,
+        card_status: user.card_ststus,
         email: user.email,
         phone: user.phone
     }
