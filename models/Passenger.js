@@ -13,14 +13,21 @@ class Passenger {
         
         this.card_id = data.card_id;
         this.card_uid = data.rfid_uid;
+        this.card_status = data.card_status;
     }
 
     static findByUsername(username) {
         return new Promise((resolve, reject) => {
             const query = `
-                SELECT p.*, c.rfid_uid FROM Passenger p
-                LEFT JOIN Card c ON p.card_id = c.card_id
-                WHERE p.username = ? AND p.status = 'ACTIVE'
+                SELECT 
+                    p.*,
+                    c.rfid_uid,
+                    c.status AS card_status
+                FROM Passenger p
+                LEFT JOIN Card c 
+                    ON p.card_id = c.card_id
+                WHERE p.username = ? 
+                AND p.status = 'ACTIVE'
             `;
             db.query(query, [username], (err, results) => {
                 if (err) { 
@@ -39,9 +46,15 @@ class Passenger {
     static findById(id) {
         return new Promise((resolve, reject) => {
             const query = `
-                SELECT p.*, c.rfid_uid FROM Passenger p
-                LEFT JOIN Card c ON p.card_id = c.card_id
-                WHERE p.passenger_id = ? AND p.status = 'ACTIVE'
+                SELECT 
+                    p.*,
+                    c.rfid_uid,
+                    c.status AS card_status
+                FROM Passenger p
+                LEFT JOIN Card c 
+                    ON p.card_id = c.card_id
+                WHERE p.passenger_id = ? 
+                AND p.status = 'ACTIVE'
             `;
             db.query(query, [id], (err, results) => {
                 if (err) { 
