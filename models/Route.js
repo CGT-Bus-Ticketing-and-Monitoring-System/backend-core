@@ -140,7 +140,7 @@ static create(data) {
     static async getAllBusRoutes(){
         return new Promise((resolve , reject) => {
             const sql_bus = `
-            SELECT route_code , start_location , end_location , base_fare
+            SELECT route_id , route_code , start_location , end_location , base_fare
             FROM Route WHERE status = 'ACTIVE'
             `;
             db.query(sql_bus , (err,results)=> {
