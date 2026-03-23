@@ -38,6 +38,10 @@ async function deleteRoute(id) {
     return success;
 }
 
+async function bus_schdule(route_id) {
+    return await Route.getBusSchedule(route_id);
+}
+
 async function assignBusToRoute(routeId, busRegNo) {
     return await Route.assignBus(routeId, busRegNo);
 }
@@ -50,6 +54,7 @@ module.exports = {
     createRoute,
     updateRoute,
     deactivateRoute,
+    bus_schdule,
     activateRoute,
     assignBusToRoute,
     deleteRoute 
