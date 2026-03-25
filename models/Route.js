@@ -153,12 +153,14 @@ static create(data) {
     static async getBusSchedule(routeid){
         return new Promise((resolve , reject) => {
             const sql_bus_sch = `
-            SELECT * 
-            FROM BusSchedule
-            WHERE route_id = ? 
-            AND departure_time > ADDTIME(CURRENT_TIME, '05:30:00') 
-            AND status = 'ACTIVE'
-            ORDER BY departure_time ASC;
+            SELECT bs.*,
+                b.registration_number AS bus_reg_no
+            FROM BusSchedule bs
+            JOIN Bus b ON bs.bus_id = b.bus_id
+            WHERE bs.route_id = ?
+            AND bs.departure_time > ADDTIME(CURRENT_TIME, '05:30:00') 
+            AND bs.status = 'ACTIVE'
+            ORDER BY bs.departure_time ASC;
             `;
 
             db.query(sql_bus_sch , [routeid], (err,results) => {
